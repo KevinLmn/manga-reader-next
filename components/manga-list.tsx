@@ -30,7 +30,7 @@ import Link from "next/link";
 export function MangaList({ search, setSearch, handleSubmit, mangas }) {
   console.log(mangas);
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen w-[100%]">
       <header className="bg-gray-900 text-white py-6 px-4 md:px-6 ">
         <div className="container mx-auto flex items-center justify-between">
           <Link className="text-2xl font-bold" href="#">

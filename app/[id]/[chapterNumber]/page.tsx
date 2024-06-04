@@ -1,6 +1,7 @@
 "use client";
 import axios from "axios";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -26,8 +27,8 @@ const Page = () => {
   }, []);
 
   return (
-    <div>
-      <button onClick={() => console.log(page)}>click</button>
+    <div className="flex flex-col items-center">
+      <Link href={`/${id}`}> Back to chapter list</Link>
       {page && (
         <div className="h-100vh overflow-scroll">
           <Image
@@ -36,9 +37,10 @@ const Page = () => {
             src={page.url}
             alt="image"
             className="overflow-scroll"
-          ></Image>
+          />
         </div>
       )}
+      <Link href={`/${id}`}> Back to chapter list</Link>
     </div>
   );
 };

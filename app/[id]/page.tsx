@@ -1,6 +1,7 @@
 "use client";
 import { ChapterList } from "@/components/chapter-list";
 import axios from "axios";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -73,14 +74,39 @@ export default function getMangaById() {
     }
   };
 
+  const downloadChapter = async (chapterId) => {
+    try {
+      await axios.post(
+        `http://localhost:3004/manga/${id}/download/`,
+        {
+          chaptersToDownloadFrom: {
+            to: chapterId,
+            from: chapterId,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   useEffect(() => {
     fetchChapters();
   }, [page, isToggled]);
 
   return (
-    <div>
+    <div className="flex flex-col">
+      <Link className="text-center" href="/">
+        Back to Search
+      </Link>
       <ChapterList
         chapters={chapters}
+        downloadChapter={downloadChapter}
         page={page}
         setPage={setPage}
         total={total}

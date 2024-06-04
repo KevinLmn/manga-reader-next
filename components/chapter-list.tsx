@@ -43,6 +43,7 @@ export function ChapterList({
   setIsToggled,
   isToggled,
   mangaId,
+  downloadChapter,
 }) {
   console.log(chapters);
 
@@ -190,6 +191,14 @@ export function ChapterList({
                     </span>
                   </div>
                 </div>
+                <button
+                  className="w-full py-2 bg-primary-500 text-gray-500 font-semibold "
+                  onClick={() => {
+                    downloadChapter(chapter.id);
+                  }}
+                >
+                  Download
+                </button>
               </div>
             );
           })}
