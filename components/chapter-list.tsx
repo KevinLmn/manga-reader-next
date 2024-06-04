@@ -217,7 +217,7 @@ export function ChapterList({
               </PaginationItem>
             )}
             {pageNumbers.map((number, index) => (
-              <PaginationItem>
+              <PaginationItem key={index}>
                 <PaginationLink
                   href="#"
                   isActive={number === page}

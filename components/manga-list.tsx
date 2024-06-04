@@ -61,7 +61,6 @@ export function MangaList({ search, setSearch, handleSubmit, mangas }) {
                     alt="Manga Cover"
                     className="w-full h-48 object-cover"
                     height="300"
-                    // src={`https://uploads.mangadex.org/covers.256.jpg`}
                     src={`https://uploads.mangadex.org/covers/${el.id}/${
                       el.relationships.filter(
                         (el) => el.type === "cover_art"

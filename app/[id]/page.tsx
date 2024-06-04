@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 export const LIMIT = 24;
 
-export default function getMangaById() {
+export default function GetMangaById() {
   const [chaptersToDownloadFrom, setChaptersToDownloadFrom] = useState({
     to: 0,
     from: 0,
