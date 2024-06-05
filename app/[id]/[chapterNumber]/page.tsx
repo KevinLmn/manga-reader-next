@@ -30,13 +30,18 @@ const Page = () => {
     <div className="flex flex-col items-center">
       <Link href={`/${id}`}> Back to chapter list</Link>
       {page && (
-        <div className="h-100vh overflow-scroll">
+        <div className="h-100vh relative overflow-scroll overflow-x-hidden overflow-y-hidden ">
           <Image
             width={900}
             height={1600}
             src={page.url}
             alt="image"
             className="overflow-scroll"
+          />
+          <Link
+            href={`/${id}/${parseInt(chapterNumber) + 1}`}
+            className="h-[100%] top-0 right-0 absolute z-10 w-[50%] cursor-pointer"
+            onClick={() => console.log("hello")}
           />
         </div>
       )}

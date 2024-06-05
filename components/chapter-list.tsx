@@ -194,7 +194,7 @@ export function ChapterList({
                 <button
                   className="w-full py-2 bg-primary-500 text-gray-500 font-semibold "
                   onClick={() => {
-                    downloadChapter(chapter.id);
+                    downloadChapter(chapter.attributes.chapter);
                   }}
                 >
                   Download

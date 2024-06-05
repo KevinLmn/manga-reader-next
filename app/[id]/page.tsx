@@ -22,7 +22,7 @@ export default function GetMangaById() {
     try {
       if (!isToggled) {
         const response = await axios.post(
-          `http://localhost:3004/manga/${id}`,
+          `http://localhost:3004/manga/${id}/not-downloaded`,
           {
             limit: LIMIT,
             offset: page - 1,
@@ -38,8 +38,12 @@ export default function GetMangaById() {
         setTotal(response.data.manga.total);
       } else {
         console.log("hello");
-        const response = await axios.get(
-          `http://localhost:3004/manga/${id}/chapters`,
+        const response = await axios.post(
+          `http://localhost:3004/manga/${id}/downloaded`,
+          {
+            limit: LIMIT,
+            offset: page - 1,
+          },
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("authToken")}`,
@@ -74,14 +78,14 @@ export default function GetMangaById() {
     }
   };
 
-  const downloadChapter = async (chapterId) => {
+  const downloadChapter = async (chapterNumber) => {
     try {
       await axios.post(
         `http://localhost:3004/manga/${id}/download/`,
         {
           chaptersToDownloadFrom: {
-            to: chapterId,
-            from: chapterId,
+            to: chapterNumber,
+            from: chapterNumber,
           },
         },
         {
@@ -104,19 +108,21 @@ export default function GetMangaById() {
       <Link className="text-center" href="/">
         Back to Search
       </Link>
-      <ChapterList
-        chapters={chapters}
-        downloadChapter={downloadChapter}
-        page={page}
-        setPage={setPage}
-        total={total}
-        setChaptersToDownloadFrom={setChaptersToDownloadFrom}
-        chaptersToDownloadFrom={chaptersToDownloadFrom}
-        handleSubmitDownload={handleSubmitDownload}
-        setIsToggled={setIsToggled}
-        isToggled={isToggled}
-        mangaId={id}
-      />
+      {chapters.length > 0 && (
+        <ChapterList
+          chapters={chapters}
+          downloadChapter={downloadChapter}
+          page={page}
+          setPage={setPage}
+          total={total}
+          setChaptersToDownloadFrom={setChaptersToDownloadFrom}
+          chaptersToDownloadFrom={chaptersToDownloadFrom}
+          handleSubmitDownload={handleSubmitDownload}
+          setIsToggled={setIsToggled}
+          isToggled={isToggled}
+          mangaId={id}
+        />
+      )}
     </div>
   );
 }
