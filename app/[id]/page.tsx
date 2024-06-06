@@ -1,5 +1,6 @@
 "use client";
 import { ChapterList } from "@/components/chapter-list";
+import axiosInterceptorInstance from "@/interceptor";
 import axios from "axios";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -21,25 +22,20 @@ export default function GetMangaById() {
   const fetchChapters = async () => {
     try {
       if (!isToggled) {
-        const response = await axios.post(
-          `http://localhost:3004/manga/${id}/not-downloaded`,
+        const response = await axiosInterceptorInstance.post(
+          `/manga/${id}?downloaded=false`,
           {
             limit: LIMIT,
             offset: page - 1,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            },
           }
         );
         console.log(response.data);
-        setChapters(response.data.manga.data);
-        setTotal(response.data.manga.total);
+        setChapters(response.data.data);
+        setTotal(response.data.total);
       } else {
         console.log("hello");
-        const response = await axios.post(
-          `http://localhost:3004/manga/${id}/downloaded`,
+        const response = await axiosInterceptorInstance.post(
+          `/manga/${id}?downloaded=true`,
           {
             limit: LIMIT,
             offset: page - 1,

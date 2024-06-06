@@ -25,7 +25,7 @@ To read more about using these font, please visit the Next.js documentation:
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
 import { Input } from "@/components/ui/input";
-import axios from "axios";
+import axiosInterceptorInstance from "@/interceptor";
 import { useState } from "react";
 
 export function Search() {
@@ -35,8 +35,8 @@ export function Search() {
     console.log("hello");
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:3004/manga",
+      const response = await axiosInterceptorInstance.post(
+        "/manga",
         {
           mangaName: search,
         },

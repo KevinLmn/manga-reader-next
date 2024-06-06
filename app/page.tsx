@@ -1,6 +1,6 @@
 "use client";
 import { MangaList } from "@/components/manga-list";
-import axios from "axios";
+import axiosInterceptorInstance from "@/interceptor";
 import { useState } from "react";
 
 export default function List() {
@@ -11,20 +11,11 @@ export default function List() {
     console.log("hello");
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:3004/manga",
-        {
-          mangaName: search,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }
-      );
-      console.log(response.data);
+      const response = await axiosInterceptorInstance.post("/manga", {
+        mangaName: search,
+      });
+      console.log("heyyyyyyyyyyyyyy", response.data.manga.data);
       setMangas(response.data.manga.data);
-      console.log(mangas);
     } catch (err) {
       console.log(err);
     }
