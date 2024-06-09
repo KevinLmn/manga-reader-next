@@ -14,6 +14,16 @@ const nextConfig = {
         port: "3004",
         pathname: "/dist/images/**",
       },
+      {
+        protocol: "https",
+        hostname: "www.uploads.mangadex.org",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**",
+      },
     ],
   },
 };

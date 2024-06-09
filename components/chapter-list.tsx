@@ -17,17 +17,11 @@ To read more about using these font, please visit the Next.js documentation:
 - App Directory: https://nextjs.org/docs/app/building-your-application/optimizing/fonts
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
+"use client";
 import { LIMIT } from "@/app/[id]/page";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import Link from "next/link";
 import { useEffect } from "react";
+import CustomPagination from "./Pagination/pagination";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Toggle } from "./ui/toggle";
@@ -55,24 +49,26 @@ export function ChapterList({
   }
   console.log(numberOfChapters);
 
-  if (totalPages <= 5) {
-    for (let i = 1; i <= totalPages; i++) {
-      pageNumbers.push(i);
-    }
-  } else {
-    console.log(page, totalPages);
-    if (page > 3 && page < totalPages - 2) {
-      pageNumbers.push(1, "...", page - 1, page, page + 1, "...", totalPages);
-    } else if (page > 3 && page === totalPages - 1) {
-      pageNumbers.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
-    } else if (page > 3 && page === totalPages - 2) {
-      pageNumbers.push(1, "...", page - 1, page, page + 1, page + 2);
-    } else if (page > 3 && page === totalPages) {
-      pageNumbers.push(1, "...", totalPages - 1, totalPages);
-    } else {
-      pageNumbers.push(1, 2, 3, "...", totalPages);
-    }
-  }
+  // if (totalPages <= 5) {
+  //   for (let i = 1; i <= totalPages; i++) {
+  //     pageNumbers.push(i);
+  //   }
+  // } else {
+  //   console.log(page, totalPages);
+  //   if (page > 3 && page < totalPages - 2) {
+  //     pageNumbers.push(1, "...", page - 1, page, page + 1, "...", totalPages);
+  //   } else if (page > 3 && page === totalPages - 1) {
+  //     pageNumbers.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
+  //   } else if (page > 3 && page === totalPages - 2) {
+  //     pageNumbers.push(1, "...", page - 1, page, page + 1, page + 2);
+  //   } else if (page > 3 && page === totalPages) {
+  //     pageNumbers.push(1, "...", totalPages - 1, totalPages);
+  //   } else if (page === 3) {
+  //     pageNumbers.push(1, "...", 2, 3, 4, "...", totalPages);
+  //   } else {
+  //     pageNumbers.push(1, 2, 3, "...", totalPages);
+  //   }
+  // }
 
   useEffect(() => {
     console.log(isToggled);
@@ -133,77 +129,51 @@ export function ChapterList({
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {chapters &&
           chapters.map((chapter) => {
-            return chapter.url ? (
-              <Link
-                href={`/${mangaId}/${chapter.attributes.chapter}`}
-                id={chapter.attributes.id}
-                className="bg-white rounded-lg shadow-md dark:bg-gray-800"
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Chapter {chapter.attributes.chapter}
-                    </span>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {chapter.attributes.pages} pages
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    {chapter.attributes.title}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      Volume {chapter.attributes.volume}
-                    </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(
-                        chapter.attributes.publishAt
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ) : (
-              <div
-                id={chapter.attributes.id}
-                className="bg-white rounded-lg shadow-md dark:bg-gray-800"
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Chapter {chapter.attributes.chapter}
-                    </span>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      {chapter.attributes.pages} pages
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    {chapter.attributes.title}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      Volume {chapter.attributes.volume}
-                    </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(
-                        chapter.attributes.publishAt
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  className="w-full py-2 bg-primary-500 text-gray-500 font-semibold "
-                  onClick={() => {
-                    downloadChapter(chapter.attributes.chapter);
-                  }}
+            return (
+              <>
+                <Link
+                  href={`/${mangaId}/chapter/${chapter.id}/1`}
+                  id={chapter.attributes.id}
+                  className="bg-white rounded-lg shadow-md dark:bg-gray-800"
                 >
-                  Download
-                </button>
-              </div>
+                  <div className="p-4 min-w-14">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Chapter {chapter.attributes.chapter}
+                      </span>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        {chapter.attributes.pages} pages
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {chapter.attributes.title}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Volume {chapter.attributes.volume}
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(
+                          chapter.attributes.publishAt
+                        ).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="w-full py-2 bg-primary-500 text-gray-500 font-semibold "
+                    onClick={() => {
+                      downloadChapter(chapter.attributes.chapter);
+                    }}
+                  >
+                    Download
+                  </button>
+                </Link>
+              </>
             );
           })}
       </div>
-      <div className="flex justify-center mt-8">
+      <CustomPagination page={page} setPage={setPage} totalPages={totalPages} />
+      {/* <div className="flex justify-center mt-8">
         <Pagination>
           <PaginationContent>
             {page > 1 && (
@@ -240,7 +210,7 @@ export function ChapterList({
             )}
           </PaginationContent>
         </Pagination>
-      </div>
+      </div> */}
     </div>
   );
 }

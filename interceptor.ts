@@ -33,7 +33,7 @@ axiosInterceptorInstance.interceptors.response.use(
           localStorage.setItem("authToken", newToken);
           console.log("2", localStorage.getItem("authToken"));
           const originalRequest = error.config;
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          originalRequest.headers.Authorization = `${newToken}`;
           console.log("originalRequest", originalRequest);
           return axiosInterceptorInstance(originalRequest);
         }
