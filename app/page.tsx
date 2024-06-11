@@ -14,8 +14,7 @@ export default function List() {
       const response = await axiosInterceptorInstance.post("/manga", {
         mangaName: search,
       });
-      console.log("heyyyyyyyyyyyyyy", response.data.manga.data);
-      setMangas(response.data.manga.data);
+      setMangas(response.data.data);
     } catch (err) {
       console.log(err);
     }

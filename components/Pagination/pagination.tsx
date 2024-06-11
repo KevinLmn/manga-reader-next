@@ -17,7 +17,6 @@ const CustomPagination = ({ totalPages, page, setPage }) => {
       pageNumbers.push(i);
     }
   } else {
-    console.log(page, totalPages);
     if (page > 3 && page < totalPages - 2) {
       pageNumbers.push(1, "...", page - 1, page, page + 1, "...", totalPages);
     } else if (page > 3 && page === totalPages - 1) {

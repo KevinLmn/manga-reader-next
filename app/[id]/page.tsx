@@ -101,7 +101,7 @@ export default function GetMangaById() {
 
   return (
     <div className="flex flex-col">
-      <Link className="text-center" href="/">
+      <Link className="text-center m-2" href="/">
         Back to Search
       </Link>
       {chapters.length > 0 && (
