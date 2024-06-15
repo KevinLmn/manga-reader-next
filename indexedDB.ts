@@ -1,75 +1,67 @@
-import { openDB } from "idb";
+import Dexie from "dexie";
 
-const DB_NAME = "mangaDB";
-const DB_VERSION = 1;
-const IMAGE_STORE_NAME = "images";
-const META_STORE_NAME = "total";
-const FIFTEEN_MINUTES = 1 * 60 * 1000;
+const ONE_MINUTE = 1 * 60 * 1000;
 
-export const initDB = async () => {
-  await openDB(DB_NAME, DB_VERSION + 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(IMAGE_STORE_NAME)) {
-        db.createObjectStore(IMAGE_STORE_NAME, { keyPath: "key" });
-      }
-      if (!db.objectStoreNames.contains(META_STORE_NAME)) {
-        db.createObjectStore(META_STORE_NAME, { keyPath: "key" });
-      }
-    },
-  });
-  const hello = await openDB(DB_NAME, DB_VERSION + 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(META_STORE_NAME)) {
-        db.createObjectStore(META_STORE_NAME, { keyPath: "key" });
-      }
-    },
-  });
-  return hello;
+type ImageType = {
+  key: string;
+  base64Image: string;
+  timestamp: number;
 };
 
-export const setImageInDB = async (key, base64Image) => {
-  const db = await initDB();
+type TotalType = {
+  key: string;
+  value: string;
+  timestamp: number;
+};
+
+class MangaDB extends Dexie {
+  images!: Dexie.Table<ImageType, ImageType["key"]>;
+  total!: Dexie.Table<TotalType, TotalType["key"]>;
+
+  constructor() {
+    super("mangaDB");
+    this.version(1).stores({
+      images: "key, base64Image, timestamp",
+      total: "key, value, timestamp",
+    });
+  }
+}
+
+const db = new MangaDB();
+
+export const setImageInDB = async (key: string, base64Image: string) => {
   const timestamp = Date.now();
-  await db.put(IMAGE_STORE_NAME, { key, base64Image, timestamp });
+  await db.table("images").put({ key, base64Image, timestamp });
 };
 
-export const getImageFromDB = async (key) => {
-  const db = await initDB();
-  const entry = await db.get(IMAGE_STORE_NAME, key);
+export const getImageFromDB = async (key: string) => {
+  const entry = await db.images.get(key);
   return entry ? entry.base64Image : null;
 };
 
-export const setMetadataInDB = async (key, value) => {
-  const db = await initDB();
+export const setMetadataInDB = async (key: string, value: string) => {
   const timestamp = Date.now();
-  await db.put(META_STORE_NAME, { key, value, timestamp });
+  await db.total.put({ key, value, timestamp });
 };
 
-export const getMetadataFromDB = async (key) => {
-  const db = await initDB();
-  const entry = await db.get(META_STORE_NAME, key);
+export const getMetadataFromDB = async (key: string) => {
+  const entry = await db.total.get(key);
   return entry ? entry.value : null;
 };
 
 export const cleanOldEntries = async () => {
-  const db = await initDB();
   const now = Date.now();
 
-  const cleanStore = async (storeName) => {
-    const tx = db.transaction(storeName, "readwrite");
-    const store = tx.objectStore(storeName);
-    const allKeys = await store.getAllKeys();
+  const cleanStore = async (storeName: "images" | "total") => {
+    const allEntries = await db[storeName].toArray();
 
-    for (const key of allKeys) {
-      const entry = await store.get(key);
-      if (now - entry.timestamp > FIFTEEN_MINUTES) {
-        await store.delete(key);
+    for (const entry of allEntries) {
+      if (now - entry.timestamp > ONE_MINUTE) {
+        await db[storeName].delete(entry.key);
       }
     }
-
-    await tx.done;
   };
 
-  await cleanStore(IMAGE_STORE_NAME);
-  await cleanStore(META_STORE_NAME);
+  await cleanStore("images");
+  await cleanStore("total");
 };

@@ -94,7 +94,7 @@ export function MangaList({ search, setSearch, handleSubmit, mangas }) {
   );
 }
 
-function SearchIcon(props) {
+export function SearchIcon(props) {
   return (
     <svg
       {...props}

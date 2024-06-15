@@ -1,14 +1,14 @@
 "use client";
 
 import axios from "axios";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     console.log("hello");
     e.preventDefault();
     try {

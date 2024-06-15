@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className=" flex justify-center items-center">
+    <html lang="en" className="flex justify-center items-center bg-neutral-900">
       <body className="h-[100%] w-[100%] flex justify-center items-center ">
         {children}
       </body>
