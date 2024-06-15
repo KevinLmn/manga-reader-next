@@ -1,5 +1,6 @@
 "use client";
-import { MangaList, SearchIcon } from "@/components/manga-list";
+import MangaSection, { SectionType } from "@/components/MangaSection";
+import { SearchIcon } from "@/components/manga-list";
 import Menu from "@/components/menu";
 import {
   Carousel,
@@ -19,21 +20,23 @@ import { FormEvent, useEffect, useState } from "react";
 export default function List() {
   const [search, setSearch] = useState("naruto");
   const [mangas, setMangas] = useState([]);
+  const [popularMangas, setPopularMangas] = useState([]);
+  const [latestMangas, setLatestMangas] = useState([]);
   const [openMenu, setOpenMenu] = useState(false);
 
-  const fetchMangaStatistics = async () => {
+  const fetchMangas = async () => {
     try {
-      const response = await axiosInterceptorInstance.post("/manga", {
-        mangaName: search,
-      });
-      setMangas(response.data.data);
+      const response = await axiosInterceptorInstance.get("/latest");
+      setLatestMangas(response.data.data);
+      const response2 = await axiosInterceptorInstance.get("/popular");
+      setPopularMangas(response2.data.data);
     } catch (err) {
       console.log(err);
     }
   };
 
   useEffect(() => {
-    fetchMangaStatistics();
+    fetchMangas();
   }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -48,8 +51,6 @@ export default function List() {
       console.log(err);
     }
   };
-
-  // console.log(mangas[0].relationships.filter((rel) => rel.type === "cover_art").fileName;
 
   return (
     <div className="w-full flex relative">
@@ -94,7 +95,7 @@ export default function List() {
               className="w-full h-full absolute left-0 flex ml-0"
               style={{}}
             >
-              {mangas.map((manga, index) => (
+              {popularMangas.map((manga, index) => (
                 <CarouselItem
                   key={index}
                   className="w-full h-full flex relative left-0 pl-0"
@@ -171,11 +172,13 @@ export default function List() {
             <CarouselNext className="right-2 absolute z-20 top-1/2 transform -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full" />
           </Carousel>
         </div>
-        <MangaList
-          search={search}
-          setSearch={setSearch}
-          handleSubmit={handleSubmit}
-          mangas={mangas}
+        <MangaSection
+          mangas={latestMangas}
+          sectionType={SectionType.LatestUpdates}
+        />
+        <MangaSection
+          mangas={popularMangas}
+          sectionType={SectionType.Popular}
         />
       </div>
     </div>
