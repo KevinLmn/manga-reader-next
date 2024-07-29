@@ -10,25 +10,28 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
-import axiosInterceptorInstance from "@/interceptor";
+import { axiosInterceptorInstance2 } from "@/interceptor";
 import { faList } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 export default function List() {
-  const [search, setSearch] = useState("naruto");
+  const [search, setSearch] = useState("");
   const [mangas, setMangas] = useState([]);
   const [popularMangas, setPopularMangas] = useState([]);
   const [latestMangas, setLatestMangas] = useState([]);
   const [openMenu, setOpenMenu] = useState(false);
 
+  const router = useRouter();
+
   const fetchMangas = async () => {
     try {
-      const response = await axiosInterceptorInstance.get("/latest");
+      const response = await axiosInterceptorInstance2.get("/api/latest");
       setLatestMangas(response.data.data);
-      const response2 = await axiosInterceptorInstance.get("/popular");
+      const response2 = await axiosInterceptorInstance2.get("/api/popular");
       setPopularMangas(response2.data.data);
     } catch (err) {
       console.log(err);
@@ -43,14 +46,22 @@ export default function List() {
     console.log("hello");
     e.preventDefault();
     try {
-      const response = await axiosInterceptorInstance.post("/manga", {
-        mangaName: search,
-      });
-      setMangas(response.data.data);
+      // const response = await axiosInterceptorInstance.post("/manga", {
+      //   mangaName: search,
+      // });
+      router.push(`/search/${search}`);
+      // setMangas(response.data.data);
     } catch (err) {
       console.log(err);
     }
   };
+
+  // const handleSearchSubmit = async () => {
+  //   try {
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   return (
     <div className="w-full flex relative">
@@ -120,16 +131,22 @@ export default function List() {
                         </p>
                         <div className="flex gap-2">
                           {manga.attributes.tags &&
-                            manga.attributes.tags.map((tag, index) => (
-                              <p
-                                key={index}
-                                className="bg-gray-800 rounded-2xl px-2 font-semibold"
-                              >
-                                {tag.attributes.name.en}
-                              </p>
-                            ))}
+                            manga.attributes.tags
+                              .slice(0, 6)
+                              .map((tag, index) => (
+                                <p
+                                  key={index}
+                                  className="bg-gray-800 rounded-2xl px-2 font-semibold"
+                                >
+                                  {tag.attributes.name.en}
+                                </p>
+                              ))}
                         </div>
-                        <p>{manga.attributes.description.en}</p>
+                        <p>
+                          {manga.attributes.description.en.slice(0, 600)}
+                          {manga.attributes.description.en.length > 600 &&
+                            "..."}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -172,14 +189,18 @@ export default function List() {
             <CarouselNext className="right-2 absolute z-20 top-1/2 transform -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full" />
           </Carousel>
         </div>
-        <MangaSection
-          mangas={latestMangas}
-          sectionType={SectionType.LatestUpdates}
-        />
-        <MangaSection
-          mangas={popularMangas}
-          sectionType={SectionType.Popular}
-        />
+        {latestMangas && (
+          <MangaSection
+            mangas={latestMangas}
+            sectionType={SectionType.LatestUpdates}
+          />
+        )}
+        {popularMangas && (
+          <MangaSection
+            mangas={popularMangas}
+            sectionType={SectionType.Popular}
+          />
+        )}
       </div>
     </div>
   );

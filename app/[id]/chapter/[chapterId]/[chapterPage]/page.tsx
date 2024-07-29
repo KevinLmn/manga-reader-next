@@ -8,7 +8,7 @@ import {
   setImageInDB,
   setMetadataInDB,
 } from "@/indexedDB";
-import axiosInterceptorInstance from "@/interceptor";
+import { axiosInterceptorInstance } from "@/interceptor";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";

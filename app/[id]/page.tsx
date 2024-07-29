@@ -1,6 +1,6 @@
 "use client";
 import { ChapterList } from "@/components/chapter-list";
-import axiosInterceptorInstance from "@/interceptor";
+import { axiosInterceptorInstance } from "@/interceptor";
 import axios from "axios";
 import Link from "next/link";
 import { useParams } from "next/navigation";

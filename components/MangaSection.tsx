@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./Reveal";
@@ -35,7 +36,7 @@ const MangaSection = ({ mangas, sectionType }) => {
             : "Popular"}
         </div>
       </Reveal>
-      <div className="mt-4 bg-neutral-800 p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="mt-4 bg-neutral-800 p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {mangas.map((manga, index) => (
           <div
             key={manga.id}
@@ -58,11 +59,11 @@ const MangaSection = ({ mangas, sectionType }) => {
                 width="133"
               />
               <Reveal>
-                <div className="p-2 flex flex-col gap-1">
+                <div className="p-2 flex flex-col gap-1 justify-between w-full h-full">
                   <h3 className="text-lg font-bold line-clamp-1">
                     {manga.attributes.title.en}
                   </h3>
-                  <p className="line-clamp-2">
+                  <p className="line-clamp-2 text-start">
                     {manga.attributes.description.en}
                   </p>
                   <div className="flex justify-between">

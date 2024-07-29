@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -19,11 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="flex justify-center items-center bg-neutral-900">
-      <QueryClientProvider client={queryClient}>
-        <body className="h-[100%] w-[100%] flex justify-center items-center ">
-          {children}
-        </body>
-      </QueryClientProvider>
+      <body className="h-[100%] w-[100%] flex justify-center items-center ">
+        {children}
+      </body>
     </html>
   );
 }

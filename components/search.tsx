@@ -25,7 +25,7 @@ To read more about using these font, please visit the Next.js documentation:
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
 import { Input } from "@/components/ui/input";
-import axiosInterceptorInstance from "@/interceptor";
+import { axiosInterceptorInstance } from "@/interceptor";
 import { useState } from "react";
 
 export function Search() {
