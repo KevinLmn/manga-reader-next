@@ -15,6 +15,7 @@ import { faList } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
@@ -112,7 +113,10 @@ export default function List() {
                   className="w-full h-full flex relative left-0 pl-0"
                 >
                   <div className="w-full h-full absolute z-10 quick-opacity-gradient"></div>
-                  <div className="absolute z-20 h-full w-full flex justify-start items-end ml-12">
+                  <Link
+                    href={`/${manga.id}`}
+                    className="absolute z-20 h-full w-full flex justify-start items-end ml-12"
+                  >
                     <div className="flex h-[70%]">
                       <Image
                         alt={`Carousel Main Image ${2}`}
@@ -149,7 +153,7 @@ export default function List() {
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                   <Image
                     alt={`Carousel Main Image ${1}`}
                     className="w-[100%] h-full object-cover object-top absolute top-0 left-0 right-0 image-box-sizing"

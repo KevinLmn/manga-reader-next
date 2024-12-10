@@ -1,4 +1,5 @@
 "use client";
+import MangaSection, { SectionType } from "@/components/MangaSection";
 import { axiosInterceptorInstance } from "@/interceptor";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -26,8 +27,13 @@ const Page = () => {
     fetchSearchedMangas();
   }, []);
 
-  console.log(searchedMangas);
-
-  return <div>hello</div>;
+  return (
+    <div>
+      <div className="flex justify-center font-bold uppercase text-3xl pt-8 text-white">
+        {searchedName.searchedName}
+      </div>
+      <MangaSection mangas={searchedMangas} sectionType={SectionType.Popular} />
+    </div>
+  );
 };
 export default Page;
