@@ -17,14 +17,14 @@ To read more about using these font, please visit the Next.js documentation:
 - App Directory: https://nextjs.org/docs/app/building-your-application/optimizing/fonts
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
-"use client";
-import { LIMIT } from "@/app/[id]/page";
-import Link from "next/link";
-import { useEffect } from "react";
-import CustomPagination from "./Pagination/pagination";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Toggle } from "./ui/toggle";
+'use client'
+import { LIMIT } from '@/app/[id]/page'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import CustomPagination from './Pagination/pagination'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Toggle } from './ui/toggle'
 
 export function ChapterList({
   chapters,
@@ -38,16 +38,18 @@ export function ChapterList({
   isToggled,
   mangaId,
   downloadChapter,
+  setChapter,
 }) {
-  console.log(chapters);
+  const [search, setSearch] = useState('')
+  console.log(chapters)
 
-  const pageNumbers = [];
-  const totalPages = Math.ceil(total / LIMIT);
-  let numberOfChapters = 0;
+  const pageNumbers = []
+  const totalPages = Math.ceil(total / LIMIT)
+  let numberOfChapters = 0
   while (chapters[numberOfChapters]?.attributes.chapter) {
-    numberOfChapters++;
+    numberOfChapters++
   }
-  console.log(numberOfChapters);
+  console.log(numberOfChapters)
 
   // if (totalPages <= 5) {
   //   for (let i = 1; i <= totalPages; i++) {
@@ -71,8 +73,18 @@ export function ChapterList({
   // }
 
   useEffect(() => {
-    console.log(isToggled);
-  }, [isToggled]);
+    console.log(isToggled)
+  }, [isToggled])
+
+  const handleSearch = () => {
+    setChapter(
+      chapters.filter((chapter: any) =>
+        (chapter.attributes.title as string)
+          .toLocaleLowerCase()
+          .includes(search.toLocaleLowerCase())
+      )
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6 md:py-12">
@@ -89,6 +101,12 @@ export function ChapterList({
         >
           Downloaded Chapters
         </Toggle>
+      </div>
+      <div className="text-center">
+        Hello
+        <input onChange={(event) => setSearch(event.target.value)}></input>
+        <button onClick={handleSearch}>Search</button>
+        <button onClick={() => setSearch('')}>Clear</button>
       </div>
       <div className="mb-6 flex items-center gap-2">
         <label
@@ -162,14 +180,14 @@ export function ChapterList({
                   <button
                     className="w-full py-2 bg-primary-500 text-gray-500 font-semibold "
                     onClick={() => {
-                      downloadChapter(chapter.attributes.chapter);
+                      downloadChapter(chapter.attributes.chapter)
                     }}
                   >
                     Download
                   </button>
                 </Link>
               </>
-            );
+            )
           })}
       </div>
       <CustomPagination page={page} setPage={setPage} totalPages={totalPages} />
@@ -212,5 +230,5 @@ export function ChapterList({
         </Pagination>
       </div> */}
     </div>
-  );
+  )
 }

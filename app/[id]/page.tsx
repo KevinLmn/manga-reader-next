@@ -1,23 +1,23 @@
-"use client";
-import { ChapterList } from "@/components/chapter-list";
-import { axiosInterceptorInstance } from "@/interceptor";
-import axios from "axios";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+'use client'
+import { ChapterList } from '@/components/chapter-list'
+import { axiosInterceptorInstance } from '@/interceptor'
+import axios from 'axios'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-export const LIMIT = 24;
+export const LIMIT = 24
 
 export default function GetMangaById() {
   const [chaptersToDownloadFrom, setChaptersToDownloadFrom] = useState({
     to: 0,
     from: 0,
-  });
-  const [chapters, setChapters] = useState([]);
-  const [total, setTotal] = useState([]);
-  const [page, setPage] = useState(1);
-  const [isToggled, setIsToggled] = useState(false);
-  const { id } = useParams();
+  })
+  const [chapters, setChapters] = useState([])
+  const [total, setTotal] = useState([])
+  const [page, setPage] = useState(1)
+  const [isToggled, setIsToggled] = useState(false)
+  const { id } = useParams()
 
   const fetchChapters = async () => {
     try {
@@ -28,12 +28,12 @@ export default function GetMangaById() {
             limit: LIMIT,
             offset: page - 1,
           }
-        );
-        console.log(response.data);
-        setChapters(response.data.data);
-        setTotal(response.data.total);
+        )
+        console.log(response.data)
+        setChapters(response.data.data)
+        setTotal(response.data.total)
       } else {
-        console.log("hello");
+        console.log('hello')
         const response = await axiosInterceptorInstance.post(
           `/manga/${id}?downloaded=true`,
           {
@@ -42,19 +42,19 @@ export default function GetMangaById() {
           },
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
           }
-        );
-        console.log(response.data);
-        setChapters(response.data.chapters);
-        setTotal(response.data.chaptersLength);
+        )
+        console.log(response.data)
+        setChapters(response.data.chapters)
+        setTotal(response.data.chaptersLength)
       }
-      console.log(chapters);
+      console.log(chapters)
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   const handleSubmitDownload = async (e) => {
     try {
@@ -65,14 +65,14 @@ export default function GetMangaById() {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         }
-      );
+      )
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   const downloadChapter = async (chapterNumber) => {
     try {
@@ -86,22 +86,22 @@ export default function GetMangaById() {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         }
-      );
+      )
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchChapters();
-  }, [page, isToggled]);
+    fetchChapters()
+  }, [page, isToggled])
 
   return (
-    <div className="flex flex-col">
-      <Link className="text-center m-2" href="/">
+    <div className="flex flex-col bg-gray-500 rounded-3xl m-10">
+      <Link className="text-center m-2 bg-white rounded-lg w-8" href="/">
         Back to Search
       </Link>
       {chapters.length > 0 && (
@@ -110,6 +110,7 @@ export default function GetMangaById() {
           downloadChapter={downloadChapter}
           page={page}
           setPage={setPage}
+          setChapter={setChapters}
           total={total}
           setChaptersToDownloadFrom={setChaptersToDownloadFrom}
           chaptersToDownloadFrom={chaptersToDownloadFrom}
@@ -120,5 +121,5 @@ export default function GetMangaById() {
         />
       )}
     </div>
-  );
+  )
 }
