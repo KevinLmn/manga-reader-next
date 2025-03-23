@@ -1,53 +1,24 @@
-"use client";
+import { GalleryVerticalEnd } from 'lucide-react'
 
-import axios from "axios";
-import { FormEvent, useState } from "react";
+import { LoginForm } from '@/components/login-form'
 
-export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    console.log("hello");
-    e.preventDefault();
-    try {
-      const response = await axios.post("http://localhost:3004/login", {
-        username,
-        password,
-      });
-      if (response.data.success) {
-        localStorage.setItem("authToken", response.data.access_token);
-      } else {
-        setError(response.data.message);
-      }
-    } catch (err) {
-      setError("An error occurred");
-    }
-  };
-
+export default function LoginPage() {
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="username">Username</label>
-        <input
-          type="text"
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+    <div className="flex justify-center items-center h-screen">
+      <div className="flex h-92 rounded-md items-center justify-center bg-gray-100 dark:bg-gray-800 px-4 py-2">
+        <div className="w-full max-w-md space-y-6">
+          <a
+            href="#"
+            className="flex items-center gap-2 justify-center font-medium"
+          >
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-900 text-gray-50 dark:bg-gray-50 dark:text-gray-900">
+              <GalleryVerticalEnd className="size-4" />
+            </div>
+            KL Inc.
+          </a>
+          <LoginForm />
+        </div>
       </div>
-      <div>
-        <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <button type="submit">Login</button>
-    </form>
-  );
+    </div>
+  )
 }

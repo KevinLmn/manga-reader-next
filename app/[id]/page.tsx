@@ -59,7 +59,7 @@ export default function GetMangaById() {
   const handleSubmitDownload = async (e) => {
     try {
       await axios.post(
-        `http://localhost:3004/manga/${id}/download/`,
+        process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/download/`,
         {
           chaptersToDownloadFrom,
         },
@@ -77,7 +77,7 @@ export default function GetMangaById() {
   const downloadChapter = async (chapterNumber) => {
     try {
       await axios.post(
-        `http://localhost:3004/manga/${id}/download/`,
+        process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/download/`,
         {
           chaptersToDownloadFrom: {
             to: chapterNumber,

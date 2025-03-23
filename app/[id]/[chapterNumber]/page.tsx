@@ -12,7 +12,7 @@ const Page = () => {
   const fetchChapters = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3004/manga/${id}/chapter/${chapterNumber}`,
+        process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/chapter/${chapterNumber}`,
         { method: "GET" }
       );
 
