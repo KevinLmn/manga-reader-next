@@ -1,43 +1,44 @@
-"use client";
-import CustomPagination from "@/components/Pagination/pagination";
-import { Button } from "@/components/ui/button";
+'use client';
+import { Button } from '@/app/components/ui/button';
+import CustomPagination from '@/app/components/ui/pagination';
 import {
   cleanOldEntries,
   getImageFromDB,
   getMetadataFromDB,
   setImageInDB,
   setMetadataInDB,
-} from "@/indexedDB";
-import { axiosInterceptorInstance } from "@/interceptor";
-import axios from "axios";
-import Image from "next/image";
-import Link from "next/link";
-import { redirect, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+} from '@/lib/indexedDB';
+import { axiosInterceptorInstance } from '@/lib/interceptor';
+import axios from 'axios';
+import Image from 'next/image';
+import Link from 'next/link';
+import { redirect, useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export const LIMIT = 24;
 
 const enum Quality {
-  HIGH = "high",
-  LOW = "low",
+  HIGH = 'high',
+  LOW = 'low',
 }
 
 export default function GetMangaPage() {
   const { id, chapterId, chapterPage } = useParams();
-  const [image, setImage] = useState("");
-  const [nextImage, setNextImage] = useState("");
-  const [previousImage, setPreviousImage] = useState("");
+  const [image, setImage] = useState<string>('');
+  const [nextImage, setNextImage] = useState<string>('');
+  const [previousImage, setPreviousImage] = useState<string>('');
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState(Number(chapterPage));
   const [quality, setQuality] = useState(Quality.HIGH);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
-  const buildUrl = (chapterId, quality) => {
+  const buildUrl = (chapterId: string, quality: string): string => {
     return `/manga/chapter/${chapterId}/${chapterPage}?quality=${quality}`;
   };
 
-  const convertImageToBase64 = async (imageUrl) => {
-    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-    const base64 = Buffer.from(response.data, "binary").toString("base64");
+  const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
+    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const base64 = Buffer.from(response.data, 'binary').toString('base64');
     return `data:image/jpeg;base64,${base64}`;
   };
 
@@ -50,11 +51,9 @@ export default function GetMangaPage() {
 
       if (cachedImage && cachedTotal) {
         setImage(cachedImage);
-        setTotal(cachedTotal);
+        setTotal(Number(cachedTotal));
       } else {
-        const response = await axiosInterceptorInstance.get(
-          buildUrl(chapterId, quality)
-        );
+        const response = await axiosInterceptorInstance.get(buildUrl(chapterId as string, quality));
         const base64Image = await convertImageToBase64(response.data.url);
         const dbresponse = await setImageInDB(imageKey, base64Image);
         console.log(dbresponse);
@@ -69,23 +68,17 @@ export default function GetMangaPage() {
 
   const fetchNextAndPreviousChapters = async () => {
     try {
-      const nextPageKey = `chapter-${chapterId}-page-${
-        parseInt(chapterPage) + 1
-      }-${quality}`;
-      const previousPageKey = `chapter-${chapterId}-page-${
-        parseInt(chapterPage) - 1
-      }-${quality}`;
+      const nextPageKey = `chapter-${chapterId}-page-${parseInt(chapterPage as string) + 1}-${quality}`;
+      const previousPageKey = `chapter-${chapterId}-page-${parseInt(chapterPage as string) - 1}-${quality}`;
 
       const cachedNextImage = await getImageFromDB(nextPageKey);
       const cachedPreviousImage = await getImageFromDB(previousPageKey);
 
       if (!cachedNextImage) {
         const nextResponse = await axiosInterceptorInstance.get(
-          buildUrl(chapterId, quality)
+          buildUrl(chapterId as string, quality)
         );
-        const nextBase64Image = await convertImageToBase64(
-          nextResponse.data.url
-        );
+        const nextBase64Image = await convertImageToBase64(nextResponse.data.url);
         await setImageInDB(nextPageKey, nextBase64Image);
         setNextImage(nextBase64Image);
       } else {
@@ -94,11 +87,9 @@ export default function GetMangaPage() {
 
       if (!cachedPreviousImage) {
         const previousResponse = await axiosInterceptorInstance.get(
-          buildUrl(chapterId, quality)
+          buildUrl(chapterId as string, quality)
         );
-        const previousBase64Image = await convertImageToBase64(
-          previousResponse.data.url
-        );
+        const previousBase64Image = await convertImageToBase64(previousResponse.data.url);
         await setImageInDB(previousPageKey, previousBase64Image);
         setPreviousImage(previousBase64Image);
       } else {
@@ -111,11 +102,11 @@ export default function GetMangaPage() {
 
   useEffect(() => {
     if (page !== Number(chapterPage))
-      redirect(`/manga/chapter/${chapterId}/${page}`);
-  }, [page]);
+      redirect(`/${id as string}/chapter/${chapterId as string}/${page}`);
+  }, [page, chapterId, chapterPage, id]);
 
   useEffect(() => {
-    setImage(null);
+    setImage('');
     fetchChapters();
     fetchNextAndPreviousChapters();
   }, [quality]);
@@ -124,50 +115,270 @@ export default function GetMangaPage() {
     cleanOldEntries();
   }, []);
 
+  // Add keyboard navigation for better user experience
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Left arrow or 'A' key for previous page
+      if ((e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') && Number(chapterPage) > 1) {
+        window.location.href = `/${id as string}/chapter/${chapterId as string}/${parseInt(chapterPage as string) - 1}`;
+      }
+      // Right arrow or 'D' key for next page
+      else if (
+        (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') &&
+        Number(chapterPage) < Number(total)
+      ) {
+        window.location.href = `/${id as string}/chapter/${chapterId as string}/${parseInt(chapterPage as string) + 1}`;
+      }
+      // 'H' key to toggle quality
+      else if (e.key === 'h' || e.key === 'H') {
+        setQuality(prevQuality => (prevQuality === Quality.HIGH ? Quality.LOW : Quality.HIGH));
+      }
+      // 'Home' key to go to first page
+      else if (e.key === 'Home' && Number(chapterPage) > 1) {
+        window.location.href = `/${id as string}/chapter/${chapterId as string}/1`;
+      }
+      // 'End' key to go to last page
+      else if (e.key === 'End' && Number(chapterPage) < Number(total)) {
+        window.location.href = `/${id as string}/chapter/${chapterId as string}/${total}`;
+      }
+      // 'Escape' key to go back to manga page
+      else if (e.key === 'Escape') {
+        window.location.href = `/${id as string}`;
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Remove event listener on cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [id, chapterId, chapterPage, total]);
+
   return (
-    <div className="flex justify-center flex-col">
-      <div className="flex justify-around m-2 items-center">
-        <Link href={`/${id}`} className="text-center ">
-          <Button variant="secondary">Back to Chapter List</Button>
-        </Link>
-        <Button
-          variant="secondary"
-          onClick={() =>
-            quality === Quality.HIGH
-              ? setQuality(Quality.LOW)
-              : setQuality(Quality.HIGH)
-          }
-        >
-          Quality : {quality === Quality.HIGH ? "High" : "Low"}
-        </Button>
-      </div>
-      <div className="flex flex-col h-[100%] relative">
+    <div className="min-h-screen bg-black flex flex-col">
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <Link
+            href={`/${id as string}`}
+            className="flex items-center space-x-2 text-white/90 hover:text-white transition-colors"
+          >
+            <Button variant="ghost" size="sm" className="flex items-center gap-1 font-medium">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-arrow-left"
+              >
+                <path d="m12 19-7-7 7-7" />
+                <path d="M19 12H5" />
+              </svg>
+              Back to Chapter List
+            </Button>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-medium text-white/80">
+              Page {chapterPage} of {total}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                quality === Quality.HIGH ? setQuality(Quality.LOW) : setQuality(Quality.HIGH)
+              }
+              className="border-gray-700 text-white hover:bg-gray-800"
+            >
+              Quality: {quality === Quality.HIGH ? 'High' : 'Low'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowShortcuts(true)}
+              className="border-gray-700 text-white hover:bg-gray-800"
+            >
+              Shortcuts
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcuts && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 w-80 rounded-lg shadow-lg p-4 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-white"
+              onClick={() => setShowShortcuts(false)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <h3 className="text-lg font-semibold text-white mb-3">Keyboard Shortcuts</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-300">Next page</span>
+                <span className="text-gray-400">→ or D</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Previous page</span>
+                <span className="text-gray-400">← or A</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Toggle quality</span>
+                <span className="text-gray-400">H</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">First page</span>
+                <span className="text-gray-400">Home</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Last page</span>
+                <span className="text-gray-400">End</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-300">Back to manga</span>
+                <span className="text-gray-400">Esc</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reading Area */}
+      <main className="flex-1 flex flex-col items-center justify-center pt-16 pb-16 relative cursor-pointer">
+        {/* Navigation Overlays */}
         {Number(chapterPage) > 1 && (
           <Link
-            href={`/${id}/chapter/${chapterId}/${parseInt(chapterPage) - 1}`}
-            className="h-[100%] top-0 left-0 absolute z-10 w-[50%] cursor-pointer"
-          />
+            href={`/${id as string}/chapter/${chapterId as string}/${parseInt(chapterPage as string) - 1}`}
+            className="fixed top-1/2 left-0 z-10 h-32 -translate-y-1/2 cursor-pointer group flex items-center"
+          >
+            <div className="opacity-0 group-hover:opacity-60 transition-all duration-200 bg-gradient-to-r from-gray-900 to-transparent absolute left-0 top-0 bottom-0 w-32">
+              <div className="absolute left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-2">
+                <div className="bg-gray-800/70 p-3 rounded-full shadow-lg">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-white"
+                  >
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Link>
         )}
+
         {Number(chapterPage) < Number(total) && (
           <Link
-            href={`/${id}/chapter/${chapterId}/${parseInt(chapterPage) + 1}`}
-            className="h-[100%] top-0 right-0 absolute z-10 w-[50%] cursor-pointer"
-          />
+            href={`/${id as string}/chapter/${chapterId as string}/${parseInt(chapterPage as string) + 1}`}
+            className="fixed top-1/2 right-0 z-10 h-32 -translate-y-1/2 cursor-pointer group flex items-center justify-end"
+          >
+            <div className="opacity-0 group-hover:opacity-60 transition-all duration-200 bg-gradient-to-l from-gray-900 to-transparent absolute right-0 top-0 bottom-0 w-32">
+              <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:-translate-x-2">
+                <div className="bg-gray-800/70 p-3 rounded-full shadow-lg">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-white"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Link>
         )}
-        {image && (
-          <>
-            <Image
-              src={image}
-              alt="logo"
-              width={1080}
-              height={0}
-              className="h-auto"
-              priority={true}
-            />
-          </>
-        )}
-        <CustomPagination page={page} setPage={setPage} totalPages={total} />
-      </div>
+
+        {/* Manga Image */}
+        <div
+          className="max-w-4xl w-full mx-auto px-4 transition-opacity duration-300"
+          style={{ opacity: image ? 1 : 0 }}
+        >
+          {image && (
+            <div className="relative shadow-2xl">
+              {Number(chapterPage) > 1 && (
+                <div
+                  className="absolute left-0 top-0 h-full w-1/2 cursor-pointer z-10"
+                  onClick={() => {
+                    window.location.href = `/${id as string}/chapter/${chapterId as string}/${parseInt(chapterPage as string) - 1}`;
+                  }}
+                />
+              )}
+
+              {Number(chapterPage) < Number(total) && (
+                <div
+                  className="absolute right-0 top-0 h-full w-1/2 cursor-pointer z-10"
+                  onClick={() => {
+                    window.location.href = `/${id as string}/chapter/${chapterId as string}/${parseInt(chapterPage as string) + 1}`;
+                  }}
+                />
+              )}
+
+              <Image
+                src={image}
+                alt={`Chapter page ${chapterPage}`}
+                width={1080}
+                height={0}
+                className="h-auto w-full object-contain"
+                priority={true}
+                placeholder="blur"
+                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+              />
+            </div>
+          )}
+          {!image && (
+            <div className="h-[80vh] flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Bottom Navigation */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-sm py-6">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center">
+            <div className="flex-1 max-w-md">
+              <CustomPagination page={page} setPage={setPage} totalPages={total} />
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

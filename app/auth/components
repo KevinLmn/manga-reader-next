@@ -1,0 +1,150 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { useAuth } from '../hooks/use-auth';
+
+export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signIn, signInWithGoogle } = useAuth();
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await signIn(email, password);
+      toast.success('Successfully logged in!');
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in with Google');
+    }
+  };
+
+  return (
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardDescription>Login with your email or Google account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-6 mx-auto max-w-2xl grid-cols-1">
+              <div className="flex flex-col gap-4 w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex items-center justify-center gap-2"
+                  onClick={handleGoogleSignIn}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      d="M21.805 10.023h-9.764v3.954h5.622c-.24 1.26-1.01 2.324-2.14 3.032l-.004.025 3.1 2.403.215.021c1.973-1.82 3.115-4.5 3.115-7.435 0-.647-.057-1.274-.144-1.904z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="M12.041 22c2.805 0 5.16-.928 6.88-2.51l-3.284-2.547c-.889.598-2.036.956-3.598.956-2.761 0-5.102-1.86-5.933-4.357l-.027.002-3.221 2.492-.042.024C3.736 19.746 7.604 22 12.041 22z"
+                      fill="#34A853"
+                    />
+                    <path
+                      d="M6.108 13.541a5.978 5.978 0 0 1-.33-1.933c0-.672.12-1.324.315-1.933L2.822 7.14l-.03.016A9.946 9.946 0 0 0 1.04 11.608c0 1.606.396 3.122 1.092 4.468l3.976-3.062z"
+                      fill="#FBBC05"
+                    />
+                    <path
+                      d="M12.041 5.951c1.522 0 2.548.654 3.134 1.202l2.292-2.232C16.256 3.515 14.254 2.6 12.041 2.6 7.604 2.6 3.736 4.854 2.03 8.284l4.058 3.124c.83-2.497 3.172-4.357 5.933-4.357z"
+                      fill="#EA4335"
+                    />
+                  </svg>
+                  Login with Google
+                </Button>
+              </div>
+              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-gray-200 dark:after:border-gray-800">
+                <span className="relative z-10 bg-white px-2 text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                  Or continue with email
+                </span>
+              </div>
+              <div className="grid gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      href="/forgot-password"
+                      className="ml-auto text-sm underline-offset-4 hover:underline"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign in'}
+                </Button>
+              </div>
+              <div className="text-center text-sm">
+                Don&apos;t have an account? {''}
+                <Link href="/signup" className="underline underline-offset-4">
+                  Sign up
+                </Link>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      <div className="text-balance text-center text-xs text-gray-500 [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-gray-900  dark:text-gray-400 dark:[&_a]:hover:text-gray-50">
+        By clicking continue, you agree to our{' '}
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className="underline underline-offset-4">
+          Privacy Policy
+        </Link>
+      </div>
+    </div>
+  );
+}

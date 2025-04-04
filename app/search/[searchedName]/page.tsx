@@ -1,8 +1,8 @@
-"use client";
-import MangaSection, { SectionType } from "@/components/MangaSection";
-import { axiosInterceptorInstance } from "@/interceptor";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+'use client';
+import MangaSection, { SectionType } from '@/app/(features)/manga/components/MangaSection';
+import { axiosInterceptorInstance } from '@/lib/interceptor';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const Page = () => {
   const [searchedMangas, setSearchedMangas] = useState([]);
@@ -13,10 +13,7 @@ const Page = () => {
 
   const fetchSearchedMangas = async () => {
     try {
-      const response = await axiosInterceptorInstance.post(
-        "/manga",
-        searchedName
-      );
+      const response = await axiosInterceptorInstance.post('/manga', searchedName);
       setSearchedMangas(response.data.data);
     } catch (err) {
       console.log(err);

@@ -1,11 +1,11 @@
-"use client";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+'use client';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 const Page = () => {
   const [loading, setLoading] = useState(true);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState('');
   const canvasRef = useRef(null);
   const { id, chapterNumber } = useParams();
 
@@ -13,11 +13,11 @@ const Page = () => {
     try {
       const response = await fetch(
         process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/chapter/${chapterNumber}`,
-        { method: "GET" }
+        { method: 'GET' }
       );
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error('Network response was not ok');
       }
 
       const reader = response.body.getReader();
@@ -44,14 +44,14 @@ const Page = () => {
         return new Promise((resolve, reject) => {
           const canvas = canvasRef.current;
           if (!canvas) {
-            console.error("Canvas not found");
-            return reject("Canvas not found");
+            console.error('Canvas not found');
+            return reject('Canvas not found');
           }
-          const ctx = canvas.getContext("2d");
+          const ctx = canvas.getContext('2d');
           const img = new Image();
 
           img.onload = () => {
-            console.log("Image loaded:", img.width, img.height);
+            console.log('Image loaded:', img.width, img.height);
             if (canvas.width === 0) {
               canvas.width = img.width;
             }
@@ -63,8 +63,8 @@ const Page = () => {
             resolve();
           };
 
-          img.onerror = (err) => {
-            console.error("Image load error:", err);
+          img.onerror = err => {
+            console.error('Image load error:', err);
             URL.revokeObjectURL(imageUrl);
             reject(err);
           };
@@ -90,7 +90,7 @@ const Page = () => {
         <Link
           href={`/${id}/${parseInt(chapterNumber) + 1}`}
           className="h-[100%] top-0 right-0 absolute z-10 w-[50%] cursor-pointer"
-          onClick={() => console.log("hello")}
+          onClick={() => console.log('hello')}
         />
       </div>
       <Link href={`/${id}`}> Back to chapter list</Link>
