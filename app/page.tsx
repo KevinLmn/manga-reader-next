@@ -1,6 +1,5 @@
 'use client';
 
-import { SearchIcon } from '@/app/(features)/manga/components/manga-list';
 import MangaSection, { SectionType } from '@/app/(features)/manga/components/MangaSection';
 import Menu from '@/app/components/layout/menu';
 import {
@@ -10,7 +9,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/app/components/ui/carousel';
-import { Input } from '@/app/components/ui/input';
 import { useLatestManga, usePopularManga } from '@/features/manga/hooks/use-manga-queries';
 import { getProxiedImageUrl } from '@/lib/utils';
 import { faList } from '@fortawesome/free-solid-svg-icons';
@@ -18,8 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Autoplay from 'embla-carousel-autoplay';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MangaRelationship {
   type: string;
@@ -52,18 +49,11 @@ interface Manga {
 }
 
 export default function List() {
-  const [search, setSearch] = useState('');
   const [openMenu, setOpenMenu] = useState(false);
   const [mainImage, setMainImage] = useState<string>('');
-  const router = useRouter();
 
   const { data: latestMangas, isLoading: isLoadingLatest } = useLatestManga();
   const { data: popularMangas, isLoading: isLoadingPopular } = usePopularManga();
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    router.push(`/search/${search}`);
-  };
 
   useEffect(() => {
     const loadMainImage = async () => {
@@ -100,16 +90,6 @@ export default function List() {
               >
                 <FontAwesomeIcon className="mr-3 size-8" icon={faList} />
               </button>
-              <p>My Manga App</p>
-              <form onSubmit={handleSubmit} className="relative w-full max-w-md">
-                <Input
-                  className="bg-gray-800 border-none text-white pl-10 pr-4 py-2 rounded-md focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                  placeholder="Search for a manga..."
-                  type="search"
-                  onChange={e => setSearch(e.target.value)}
-                />
-                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              </form>
             </div>
             <div className="">Popular Titles</div>
           </div>

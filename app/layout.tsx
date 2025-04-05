@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} bg-gray-950 text-gray-50`}>
         <Providers>
           {children}
-          <Toaster />
+          <Toaster position="bottom-right" />
         </Providers>
       </body>
     </html>

@@ -1,4 +1,10 @@
-import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 
 /**
  * Interface for the token refresh response
@@ -65,7 +71,7 @@ const isAuthError = (error: AxiosError<ApiErrorResponse>): boolean => {
  * Can be disabled in production via env variable
  */
 const logger = {
-  request: (config: InternalAxiosRequestConfig): void => {
+  request: (config: AxiosRequestConfig): void => {
     if (process.env.NODE_ENV !== 'production') {
       console.log(`🚀 Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
@@ -88,13 +94,14 @@ const logger = {
 /**
  * Request interceptor to add auth token and required headers
  */
-const requestInterceptor = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+const requestInterceptor = (config: AxiosRequestConfig): AxiosRequestConfig => {
   try {
     // Get token from localStorage
     const token = localStorage.getItem('authToken') || localStorage.getItem('token');
 
     // Add Authorization header if token exists
     if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -125,7 +132,7 @@ const responseErrorInterceptor = async (
   logger.error(error);
 
   // Get the original request config
-  const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+  const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
   // Prevent infinite refresh loops
   if (originalRequest._retry) {
@@ -149,6 +156,7 @@ const responseErrorInterceptor = async (
       const newToken = await handleTokenRefresh(token);
 
       // Update the request with the new token
+      originalRequest.headers = originalRequest.headers || {};
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
       // Retry the original request with the new token
@@ -179,17 +187,63 @@ const responseErrorInterceptor = async (
 const createAxiosInstance = (baseURL: string): AxiosInstance => {
   const instance = axios.create({
     baseURL,
-    withCredentials: true,
-    timeout: 30000, // 30 seconds
+    timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
-      Accept: 'application/json',
     },
   });
 
-  // Add interceptors
-  instance.interceptors.request.use(requestInterceptor);
-  instance.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+  instance.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    error => {
+      return Promise.reject(error);
+    }
+  );
+
+  instance.interceptors.response.use(
+    response => {
+      return response;
+    },
+    async (error: AxiosError) => {
+      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+      if (!originalRequest) {
+        return Promise.reject(error);
+      }
+
+      if (error.response?.status === 401) {
+        try {
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (!refreshToken) {
+            throw new Error('No refresh token available');
+          }
+
+          const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+
+          const { token, refreshToken: newRefreshToken } = response.data;
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('refreshToken', newRefreshToken);
+
+          originalRequest.headers = originalRequest.headers || {};
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return instance(originalRequest);
+        } catch (refreshError) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
 
   return instance;
 };

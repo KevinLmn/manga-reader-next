@@ -9,7 +9,7 @@ import {
   setMetadataInDB,
 } from '@/lib/indexedDB';
 import { axiosInterceptorInstance } from '@/lib/interceptor';
-import { convertImageToBase64 } from '@/lib/utils';
+import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useParams } from 'next/navigation';
@@ -34,6 +34,13 @@ export default function GetMangaPage() {
     return `/manga/chapter/${chapterId}/${chapterPage}?quality=${quality}`;
   };
 
+  const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
+    const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+    const response = await axios.get(proxyUrl, { responseType: 'arraybuffer' });
+    const base64 = Buffer.from(response.data, 'binary').toString('base64');
+    return `data:image/jpeg;base64,${base64}`;
+  };
+
   const fetchChapters = async () => {
     try {
       const imageKey = `chapter-${chapterId}-page-${chapterPage}-${quality}`;
@@ -47,8 +54,7 @@ export default function GetMangaPage() {
       } else {
         const response = await axiosInterceptorInstance.get(buildUrl(chapterId as string, quality));
         const base64Image = await convertImageToBase64(response.data.url);
-        const dbresponse = await setImageInDB(imageKey, base64Image);
-        console.log(dbresponse);
+        await setImageInDB(imageKey, base64Image);
         await setMetadataInDB(totalKey, response.data.numberOfPages);
         setImage(base64Image);
         setTotal(response.data.numberOfPages);
@@ -101,7 +107,7 @@ export default function GetMangaPage() {
     setImage('');
     fetchChapters();
     fetchNextAndPreviousChapters();
-  }, [quality]);
+  }, [quality, chapterPage, chapterId]);
 
   useEffect(() => {
     cleanOldEntries();
@@ -151,8 +157,8 @@ export default function GetMangaPage() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm h-16">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm h-14">
+        <div className="container mx-auto px-4 h-full flex justify-between items-center">
           <Link
             href={`/${id as string}`}
             className="flex items-center space-x-2 text-white/90 hover:text-white transition-colors"
@@ -362,12 +368,11 @@ export default function GetMangaPage() {
       </main>
 
       {/* Bottom Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-sm py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center">
-            <div className="flex-1 max-w-md">
-              <CustomPagination page={page} setPage={setPage} totalPages={total} />
-            </div>
+      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/90 to-transparent h-14">
+        <div className="absolute inset-0 backdrop-blur-md"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="max-w-md flex items-center pb-8">
+            <CustomPagination page={page} setPage={setPage} totalPages={total} />
           </div>
         </div>
       </footer>

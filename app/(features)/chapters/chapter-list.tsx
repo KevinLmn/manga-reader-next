@@ -18,8 +18,7 @@ To read more about using these font, please visit the Next.js documentation:
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
 'use client';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
+import { Download } from 'lucide-react';
 import Link from 'next/link';
 import CustomPagination from './Pagination/pagination';
 
@@ -47,9 +46,6 @@ interface ChapterListProps {
   page: number;
   setPage: (page: number) => void;
   total: number;
-  setChaptersToDownloadFrom: (chapters: ChaptersToDownload) => void;
-  chaptersToDownloadFrom: ChaptersToDownload;
-  handleSubmitDownload: () => void;
   mangaId: string;
   downloadChapter: (chapter: string) => void;
   setChapter: (chapters: Chapter[]) => void;
@@ -60,9 +56,6 @@ export function ChapterList({
   page,
   setPage,
   total,
-  setChaptersToDownloadFrom,
-  chaptersToDownloadFrom,
-  handleSubmitDownload,
   mangaId,
   downloadChapter,
   setChapter,
@@ -79,78 +72,47 @@ export function ChapterList({
         <h1 className="text-2xl font-bold md:text-3xl">Manga Chapters</h1>
         <p className="text-gray-500 dark:text-gray-400">Browse through the latest chapters.</p>
       </div>
-      <div className="mb-6 flex items-center gap-2">
-        <label htmlFor="download-from" className="text-gray-500 dark:text-gray-400">
-          Download chapters from:
-        </label>
-        <Input
-          id="download-from"
-          type="number"
-          placeholder="From"
-          className="w-20"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setChaptersToDownloadFrom({
-              ...chaptersToDownloadFrom,
-              from: e.target.value,
-            })
-          }
-        />
-        <span className="text-gray-500 dark:text-gray-400">to</span>
-        <Input
-          id="download-to"
-          type="number"
-          placeholder="To"
-          className="w-20"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setChaptersToDownloadFrom({
-              ...chaptersToDownloadFrom,
-              to: e.target.value,
-            })
-          }
-        />
-        <Button variant="outline" onClick={handleSubmitDownload}>
-          Validate
-        </Button>
-      </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {chapters &&
           chapters.map((chapter: Chapter) => {
             return (
-              <>
-                <Link
-                  href={`/${mangaId}/chapter/${chapter.id}/1`}
-                  id={chapter.attributes.id}
-                  className="bg-white rounded-lg shadow-md dark:bg-gray-800"
-                >
-                  <div className="p-4 min-w-14">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Chapter {chapter.attributes.chapter}
-                      </span>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        {chapter.attributes.pages} pages
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{chapter.attributes.title}</h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Volume {chapter.attributes.volume}
-                      </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(chapter.attributes.publishAt).toLocaleDateString()}
-                      </span>
-                    </div>
+              <div
+                key={chapter.id}
+                className="bg-white rounded-lg shadow-md dark:bg-gray-800 overflow-hidden hover:shadow-lg transition-shadow duration-200"
+              >
+                <Link href={`/${mangaId}/chapter/${chapter.id}/1`} className="block p-4 min-w-14">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Chapter {chapter.attributes.chapter}
+                    </span>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {chapter.attributes.pages} pages
+                    </span>
                   </div>
+                  <h3 className="text-lg font-semibold mb-2">{chapter.attributes.title}</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Volume {chapter.attributes.volume}
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(chapter.attributes.publishAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </Link>
+                <div className="border-t border-gray-200 dark:border-gray-700">
                   <button
-                    className="w-full py-2 bg-primary-500 text-gray-500 font-semibold "
-                    onClick={() => {
-                      downloadChapter(chapter.attributes.chapter);
+                    className="w-full py-3 px-4 bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center justify-center gap-2 group"
+                    onClick={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      downloadChapter(chapter.id);
                     }}
                   >
-                    Download
+                    <Download className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span>Download Chapter</span>
                   </button>
-                </Link>
-              </>
+                </div>
+              </div>
             );
           })}
       </div>
