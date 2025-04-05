@@ -6,10 +6,15 @@ import { useEffect, useRef, useState } from 'react';
 const Page = () => {
   const [loading, setLoading] = useState(true);
   const [imageUrl, setImageUrl] = useState('');
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { id, chapterNumber } = useParams();
 
   const fetchChapters = async () => {
+    if (!id || !chapterNumber || Array.isArray(id) || Array.isArray(chapterNumber)) {
+      console.error('Invalid id or chapterNumber');
+      return;
+    }
+
     try {
       const response = await fetch(
         process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/chapter/${chapterNumber}`,
@@ -18,6 +23,10 @@ const Page = () => {
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is null');
       }
 
       const reader = response.body.getReader();
@@ -40,7 +49,7 @@ const Page = () => {
         await readChunk();
       };
 
-      const drawChunk = (imageUrl, yOffset) => {
+      const drawChunk = (imageUrl: string, yOffset: number): Promise<void> => {
         return new Promise((resolve, reject) => {
           const canvas = canvasRef.current;
           if (!canvas) {
@@ -48,6 +57,11 @@ const Page = () => {
             return reject('Canvas not found');
           }
           const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            console.error('Canvas context not found');
+            return reject('Canvas context not found');
+          }
+
           const img = new Image();
 
           img.onload = () => {
@@ -78,9 +92,15 @@ const Page = () => {
       console.log(err);
     }
   };
+
   useEffect(() => {
     fetchChapters();
   }, [id, chapterNumber]);
+
+  const handleNextChapter = () => {
+    if (!chapterNumber || Array.isArray(chapterNumber)) return;
+    return `/${id}/${parseInt(chapterNumber) + 1}`;
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -88,7 +108,7 @@ const Page = () => {
       <div className="h-100vh relative overflow-scroll overflow-x-hidden overflow-y-hidden">
         <canvas ref={canvasRef} className="overflow-scroll"></canvas>
         <Link
-          href={`/${id}/${parseInt(chapterNumber) + 1}`}
+          href={handleNextChapter() || '#'}
           className="h-[100%] top-0 right-0 absolute z-10 w-[50%] cursor-pointer"
           onClick={() => console.log('hello')}
         />

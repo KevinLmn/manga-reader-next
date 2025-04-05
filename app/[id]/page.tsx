@@ -1,5 +1,5 @@
 'use client';
-import { ChapterList } from '@/app/(features)/chapters/components/chapter-list';
+import { ChapterList } from '@/app/(features)/chapters/chapter-list';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 import { axiosInterceptorInstance } from '@/lib/interceptor';
@@ -10,18 +10,57 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export const LIMIT = 24;
+const LIMIT = 24;
+
+interface ChaptersToDownload {
+  to: number | string;
+  from: number | string;
+}
+
+interface Chapter {
+  id: string;
+  attributes: {
+    chapter: string;
+    title: string;
+    volume: string;
+    pages: number;
+    publishAt: string;
+    id: string;
+  };
+}
+
+interface Manga {
+  id: string;
+  attributes?: {
+    title: { en: string };
+    description: { en: string };
+    tags: Array<{
+      attributes: {
+        name: { en: string };
+      };
+    }>;
+  };
+  relationships: Array<{
+    type: string;
+    attributes: {
+      fileName: string;
+    };
+  }>;
+}
 
 export default function GetMangaById() {
-  const [chaptersToDownloadFrom, setChaptersToDownloadFrom] = useState({
+  const [chaptersToDownloadFrom, setChaptersToDownloadFrom] = useState<ChaptersToDownload>({
     to: 0,
     from: 0,
   });
-  const [chapters, setChapters] = useState([]);
-  const [total, setTotal] = useState([]);
-  const [page, setPage] = useState(1);
-  const [manga, setManga] = useState({});
-  const [isToggled, setIsToggled] = useState(false);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [manga, setManga] = useState<Manga>({
+    id: '',
+    relationships: [],
+  });
+  const [isToggled, setIsToggled] = useState<boolean>(false);
   const { id } = useParams();
 
   const fetchChapters = async () => {
@@ -57,7 +96,7 @@ export default function GetMangaById() {
     }
   };
 
-  const handleSubmitDownload = async e => {
+  const handleSubmitDownload = async () => {
     try {
       await axios.post(
         process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/download/`,
@@ -75,7 +114,7 @@ export default function GetMangaById() {
     }
   };
 
-  const downloadChapter = async chapterNumber => {
+  const downloadChapter = async (chapterNumber: string) => {
     try {
       await axios.post(
         process.env.NEXT_PUBLIC_API_URL + `/manga/${id}/download/`,
@@ -100,16 +139,16 @@ export default function GetMangaById() {
     fetchChapters();
   }, [page, isToggled]);
 
-  // uploads.mangadex.org%2Fcovers%2Fd1a9fdeb-f713-407f-960c-8326b586e6fd%2F05f8dcb4-8ea1-48db-a0b1-3a8fbf695e5a.jpg.256.jpg&w=384&q=75
-  // https://uploads.mangadex.org/covers/d1a9fdeb-f713-407f-960c-8326b586e6fd/8e74a0f1-09a0-407f-9bfd-d4dc961e54e9.256.jpg
-
   useEffect(() => {
-    console.log(manga);
-    console.log(
-      `https://uploads.mangadex.org/covers/${manga.id}/${
-        manga?.relationships?.filter(el => el.type === 'cover_art')[0].attributes.fileName
-      }.512.jpg`
-    );
+    if (manga.id && manga.relationships?.length > 0) {
+      console.log(manga);
+      const coverArt = manga.relationships.find(el => el.type === 'cover_art');
+      if (coverArt) {
+        console.log(
+          `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`
+        );
+      }
+    }
   }, [manga]);
 
   return (
@@ -182,18 +221,6 @@ export default function GetMangaById() {
             {/* Chapters Section */}
             <div className="mt-8">
               <Card className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-semibold">Chapters</h2>
-                  <div className="flex gap-4">
-                    <Button
-                      variant={isToggled ? 'default' : 'outline'}
-                      onClick={() => setIsToggled(!isToggled)}
-                    >
-                      {isToggled ? 'Show All' : 'Show Downloaded'}
-                    </Button>
-                  </div>
-                </div>
-
                 {chapters.length > 0 && (
                   <ChapterList
                     chapters={chapters}
@@ -205,9 +232,7 @@ export default function GetMangaById() {
                     setChaptersToDownloadFrom={setChaptersToDownloadFrom}
                     chaptersToDownloadFrom={chaptersToDownloadFrom}
                     handleSubmitDownload={handleSubmitDownload}
-                    setIsToggled={setIsToggled}
-                    isToggled={isToggled}
-                    mangaId={id}
+                    mangaId={id as string}
                   />
                 )}
               </Card>

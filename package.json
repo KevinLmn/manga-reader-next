@@ -11,7 +11,8 @@
     "test": "jest",
     "analyze": "cross-env ANALYZE=true next build",
     "prepare": "husky install",
-    "warm-cache": "bash warm_cache.sh",
+    "warm-cache": "node scripts/warm-cache.js",
+    "warm-next-cache": "node scripts/warm-next-cache.js",
     "warm-cache:win": "powershell -File warm_cache.ps1"
   },
   "dependencies": {

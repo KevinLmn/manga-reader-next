@@ -15,8 +15,6 @@ import Link from 'next/link';
 import { redirect, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export const LIMIT = 24;
-
 const enum Quality {
   HIGH = 'high',
   LOW = 'low',
@@ -159,7 +157,7 @@ export default function GetMangaPage() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm h-16">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link
             href={`/${id as string}`}

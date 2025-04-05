@@ -3,7 +3,7 @@ import { faBook, faHome, faTag, faXmark } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { motion } from 'framer-motion';
 
-const Menu = ({ openMenu, setOpenMenu }) => {
+const Menu = ({ openMenu, setOpenMenu }: { openMenu: boolean; setOpenMenu: (openMenu: boolean) => void }) => {
   console.log(openMenu);
   return (
     <>

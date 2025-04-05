@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  included_files = [
+    "netlify/functions/**/*",
+    "node_modules/child-process-promise/**/*",
+    "node_modules/axios/**/*"
+  ]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[schedule]]
+  cron = "*/9 * * * *"
+  function = "warm-cache" 

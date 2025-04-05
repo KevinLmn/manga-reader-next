@@ -216,3 +216,10 @@ export const createClientAxios = (): AxiosInstance => {
 
   return createAxiosInstance(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004');
 };
+
+// Update the default export to use the environment variable with type check
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+}
+
+export default createAxiosInstance(process.env.NEXT_PUBLIC_API_URL);

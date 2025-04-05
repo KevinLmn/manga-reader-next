@@ -34,45 +34,37 @@ const CustomPagination = ({ totalPages, page, setPage }: PaginationProps) => {
   }
 
   return (
-    <div className="flex justify-center">
-      <nav className="flex items-center space-x-1" aria-label="Pagination">
+    <div className="flex justify-center mt-8">
+      <nav className="flex items-center space-x-2" aria-label="Pagination">
         {page > 1 && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setPage(page - 1)}
-            className="h-7 w-7 p-0 text-white/70 hover:text-white hover:bg-gray-800 rounded-md"
+            className={cn('h-8 w-8 p-0')}
           >
             <span className="sr-only">Previous page</span>
             <ChevronLeftIcon className="h-4 w-4" />
           </Button>
         )}
-
         {pageNumbers.map((number, index) => (
           <Button
             key={index}
-            variant={number === page ? 'default' : 'ghost'}
+            variant={number === page ? 'default' : 'outline'}
             size="sm"
             onClick={() => typeof number === 'number' && setPage(number)}
             disabled={typeof number !== 'number'}
-            className={cn(
-              'h-7 min-w-[1.75rem] p-0 rounded-md text-xs',
-              typeof number !== 'number'
-                ? 'cursor-default text-white/40 hover:bg-transparent px-0.5'
-                : 'text-white/70 hover:text-white',
-              number === page && 'bg-primary hover:bg-primary/80 text-white font-medium'
-            )}
+            className={cn('h-8 w-8 p-0', typeof number !== 'number' && 'cursor-default')}
           >
             {number}
           </Button>
         ))}
-
         {page < totalPages && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setPage(page + 1)}
-            className="h-7 w-7 p-0 text-white/70 hover:text-white hover:bg-gray-800 rounded-md"
+            className={cn('h-8 w-8 p-0')}
           >
             <span className="sr-only">Next page</span>
             <ChevronRightIcon className="h-4 w-4" />
