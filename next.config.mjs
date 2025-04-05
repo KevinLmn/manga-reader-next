@@ -13,26 +13,40 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'uploads.mangadex.org',
         port: '',
-        pathname: '/covers/**',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '3004',
-        pathname: '/dist/images/**',
+        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'www.uploads.mangadex.org',
+        hostname: 'api.mangadex.org',
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'mangadex.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.mangadex.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mangadex.network',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.mangadex.network',
+        port: '',
+        pathname: '/**',
       },
     ],
-    domains: [], // Add your image domains here
+    unoptimized: true,
   },
   async headers() {
     return [
