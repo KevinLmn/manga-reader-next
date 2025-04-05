@@ -3,6 +3,7 @@ import { ChapterList } from '@/app/(features)/chapters/chapter-list';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 import { axiosInterceptorInstance } from '@/lib/interceptor';
+import { getProxiedImageUrl } from '@/lib/utils';
 import axios from 'axios';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -151,6 +152,12 @@ export default function GetMangaById() {
     }
   }, [manga]);
 
+  const coverFileName = manga?.relationships.find(el => el.type === 'cover_art')?.attributes
+    .fileName;
+  const coverUrl = coverFileName
+    ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.512.jpg`
+    : '';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Fixed Header */}
@@ -173,15 +180,11 @@ export default function GetMangaById() {
               {/* Background Image with Gradient */}
               <div className="absolute inset-0 z-0">
                 <Image
-                  src={`https://uploads.mangadex.org/covers/${manga.id}/${
-                    manga.relationships.find(el => el.type === 'cover_art')?.attributes.fileName
-                  }.512.jpg`}
+                  src={getProxiedImageUrl(coverUrl)}
                   alt="Background"
                   fill
-                  className="object-cover opacity-20 blur-sm"
-                  priority
+                  className="object-cover blur-sm opacity-30"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
               </div>
 
               {/* Content */}
@@ -190,12 +193,9 @@ export default function GetMangaById() {
                 <div className="relative h-[400px] w-[280px] shrink-0 rounded-lg overflow-hidden shadow-xl">
                   <Image
                     alt="Cover"
-                    src={`https://uploads.mangadex.org/covers/${manga.id}/${
-                      manga.relationships.find(el => el.type === 'cover_art')?.attributes.fileName
-                    }.512.jpg`}
+                    src={getProxiedImageUrl(coverUrl)}
                     fill
                     className="object-cover"
-                    priority
                   />
                 </div>
 

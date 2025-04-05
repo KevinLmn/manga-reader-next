@@ -9,7 +9,7 @@ import {
   setMetadataInDB,
 } from '@/lib/indexedDB';
 import { axiosInterceptorInstance } from '@/lib/interceptor';
-import axios from 'axios';
+import { convertImageToBase64 } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useParams } from 'next/navigation';
@@ -32,12 +32,6 @@ export default function GetMangaPage() {
 
   const buildUrl = (chapterId: string, quality: string): string => {
     return `/manga/chapter/${chapterId}/${chapterPage}?quality=${quality}`;
-  };
-
-  const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
-    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    const base64 = Buffer.from(response.data, 'binary').toString('base64');
-    return `data:image/jpeg;base64,${base64}`;
   };
 
   const fetchChapters = async () => {

@@ -7,46 +7,30 @@ const withBundleAnalyzer = bundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    minimumCacheTTL: 120,
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'uploads.mangadex.org',
-        port: '',
-        pathname: '/**',
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3004',
+        pathname: '/api/proxy/image/**',
+      },
+      {
+        protocol: 'http',
+        hostname: process.env.NEXT_PUBLIC_API_URL
+          ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
+          : 'localhost',
+        port: process.env.NEXT_PUBLIC_API_URL
+          ? new URL(process.env.NEXT_PUBLIC_API_URL).port
+          : '3004',
+        pathname: '/api/proxy/image/**',
       },
       {
         protocol: 'https',
-        hostname: 'api.mangadex.org',
+        hostname: '**',
         port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'mangadex.org',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.mangadex.org',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'mangadex.network',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.mangadex.network',
-        port: '',
-        pathname: '/**',
+        pathname: '**',
       },
     ],
-    unoptimized: true,
   },
   async headers() {
     return [

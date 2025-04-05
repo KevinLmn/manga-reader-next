@@ -1,5 +1,6 @@
 'use client';
 import { Reveal } from '@/app/components/ui/Reveal';
+import { getProxiedImageUrl } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -76,9 +77,11 @@ const MangaSection = ({ mangas, sectionType }: MangaSectionProps) => {
                 className="object-cover"
                 height={400}
                 width={400}
-                src={`https://uploads.mangadex.org/covers/${manga.id}/${
-                  manga.relationships.find(el => el.type === 'cover_art')!.attributes.fileName
-                }.256.jpg`}
+                src={getProxiedImageUrl(
+                  `https://uploads.mangadex.org/covers/${manga.id}/${
+                    manga.relationships.find(el => el.type === 'cover_art')!.attributes.fileName
+                  }.256.jpg`
+                )}
                 style={{
                   aspectRatio: '160/200',
                   objectFit: 'cover',
