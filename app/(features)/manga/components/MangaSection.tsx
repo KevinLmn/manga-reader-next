@@ -3,6 +3,7 @@ import { Reveal } from '@/app/components/ui/Reveal';
 import { getProxiedImageUrl } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export enum SectionType {
   LatestUpdates = 'LatestUpdates',
@@ -38,7 +39,34 @@ interface MangaSectionProps {
   sectionType: SectionType;
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
 const MangaSection = ({ mangas, sectionType }: MangaSectionProps) => {
+  const [coverUrls, setCoverUrls] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
+  const [errorImages, setErrorImages] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const newCoverUrls: Record<string, string> = {};
+    const newLoadingImages: Record<string, boolean> = {};
+    const newErrorImages: Record<string, boolean> = {};
+
+    for (const manga of mangas) {
+      const coverArt = manga.relationships.find(el => el.type === 'cover_art');
+      if (coverArt) {
+        newLoadingImages[manga.id] = true;
+        const coverUrl = `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.256.jpg`;
+        newCoverUrls[manga.id] = getProxiedImageUrl(coverUrl);
+        newLoadingImages[manga.id] = false;
+      }
+    }
+
+    setLoadingImages(newLoadingImages);
+    setErrorImages(newErrorImages);
+    setCoverUrls(newCoverUrls);
+  }, [mangas]);
+
   const getTimePassedSince = (date: string): string => {
     const currentDate = new Date();
     const updatedAt = new Date(date);
@@ -72,21 +100,29 @@ const MangaSection = ({ mangas, sectionType }: MangaSectionProps) => {
             className="rounded-lg overflow-hidden bg-neutral-800 shadow-manga-list w-[160px] h-[280px]"
           >
             <Link href={`/${manga.id}`} className="h-full flex flex-col">
-              <Image
-                alt="Manga Cover"
-                className="object-cover"
-                height={400}
-                width={400}
-                src={getProxiedImageUrl(
-                  `https://uploads.mangadex.org/covers/${manga.id}/${
-                    manga.relationships.find(el => el.type === 'cover_art')!.attributes.fileName
-                  }.256.jpg`
-                )}
-                style={{
-                  aspectRatio: '160/200',
-                  objectFit: 'cover',
-                }}
-              />
+              {loadingImages[manga.id] ? (
+                <div className="w-full h-[200px] bg-gray-200 animate-pulse" />
+              ) : errorImages[manga.id] ? (
+                <div className="w-full h-[200px] bg-gray-800 flex items-center justify-center">
+                  <span className="text-gray-400">Failed to load image</span>
+                </div>
+              ) : (
+                <Image
+                  alt="Manga Cover"
+                  className="object-cover"
+                  height={400}
+                  width={400}
+                  src={coverUrls[manga.id] || ''}
+                  style={{
+                    aspectRatio: '160/200',
+                    objectFit: 'cover',
+                  }}
+                  priority={index < 4}
+                  onError={() => {
+                    setErrorImages(prev => ({ ...prev, [manga.id]: true }));
+                  }}
+                />
+              )}
               <Reveal>
                 <div className="p-2 flex flex-col gap-1 justify-between">
                   <h3 className="text-sm font-bold line-clamp-1">

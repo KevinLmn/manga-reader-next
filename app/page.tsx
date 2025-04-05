@@ -12,13 +12,24 @@ import {
 } from '@/app/components/ui/carousel';
 import { Input } from '@/app/components/ui/input';
 import { useLatestManga, usePopularManga } from '@/features/manga/hooks/use-manga-queries';
+import { getProxiedImageUrl } from '@/lib/utils';
 import { faList } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Autoplay from 'embla-carousel-autoplay';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+
+interface MangaRelationship {
+  type: string;
+  id: string;
+  attributes?: {
+    fileName?: string;
+    name?: string;
+    [key: string]: any;
+  };
+}
 
 interface Manga {
   id: string;
@@ -37,17 +48,13 @@ interface Manga {
       };
     }>;
   };
-  relationships: Array<{
-    type: string;
-    attributes: {
-      fileName: string;
-    };
-  }>;
+  relationships: MangaRelationship[];
 }
 
 export default function List() {
   const [search, setSearch] = useState('');
   const [openMenu, setOpenMenu] = useState(false);
+  const [mainImage, setMainImage] = useState<string>('');
   const router = useRouter();
 
   const { data: latestMangas, isLoading: isLoadingLatest } = useLatestManga();
@@ -57,6 +64,24 @@ export default function List() {
     e.preventDefault();
     router.push(`/search/${search}`);
   };
+
+  useEffect(() => {
+    const loadMainImage = async () => {
+      if (popularMangas?.[0]) {
+        const coverArt = popularMangas[0].relationships.find(
+          (el: MangaRelationship) => el.type === 'cover_art'
+        );
+        if (coverArt?.attributes?.fileName) {
+          const imageUrl = await getProxiedImageUrl(
+            `https://uploads.mangadex.org/covers/${popularMangas[0].id}/${coverArt.attributes.fileName}.256.jpg`
+          );
+          setMainImage(imageUrl);
+        }
+      }
+    };
+
+    loadMainImage();
+  }, [popularMangas]);
 
   if (isLoadingLatest || isLoadingPopular) {
     return <div>Loading...</div>;
@@ -112,10 +137,13 @@ export default function List() {
                         className="rounded-md"
                         height={280}
                         width={180}
-                        src={`https://uploads.mangadex.org/covers/${manga.id}/${
-                          manga.relationships.find(el => el.type === 'cover_art')?.attributes
-                            .fileName
-                        }.256.jpg`}
+                        src={getProxiedImageUrl(
+                          `https://uploads.mangadex.org/covers/${manga.id}/${
+                            manga.relationships.find(
+                              (el: MangaRelationship) => el.type === 'cover_art'
+                            )?.attributes?.fileName
+                          }.256.jpg`
+                        )}
                       />
                       <div className="h-full w-[75%] flex flex-col items-between justify-between px-4 text-white pb-10">
                         <p className="font-bold text-2xl">{manga.attributes.title.en}</p>
@@ -138,9 +166,12 @@ export default function List() {
                     alt={`Carousel Main Image ${1}`}
                     className="w-[100%] h-full object-cover object-top absolute top-0 left-0 right-0 image-box-sizing"
                     fill
-                    src={`https://uploads.mangadex.org/covers/${manga.id}/${
-                      manga.relationships.find(el => el.type === 'cover_art')?.attributes.fileName
-                    }.512.jpg`}
+                    src={getProxiedImageUrl(
+                      `https://uploads.mangadex.org/covers/${manga.id}/${
+                        manga.relationships.find((el: MangaRelationship) => el.type === 'cover_art')
+                          ?.attributes?.fileName
+                      }.512.jpg`
+                    )}
                     style={{
                       zIndex: -1,
                     }}

@@ -61,6 +61,8 @@ export default function GetMangaById() {
     id: '',
     relationships: [],
   });
+  const [coverImage, setCoverImage] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isToggled, setIsToggled] = useState<boolean>(false);
   const { id } = useParams();
 
@@ -141,22 +143,28 @@ export default function GetMangaById() {
   }, [page, isToggled]);
 
   useEffect(() => {
-    if (manga.id && manga.relationships?.length > 0) {
-      console.log(manga);
-      const coverArt = manga.relationships.find(el => el.type === 'cover_art');
-      if (coverArt) {
-        console.log(
-          `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`
-        );
+    const fetchCoverImage = async () => {
+      if (manga.id && manga.relationships?.length > 0) {
+        setIsLoading(true);
+        try {
+          const coverArt = manga.relationships.find(el => el.type === 'cover_art');
+          if (coverArt) {
+            const coverUrl = `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
+            const base64Image = await getProxiedImageUrl(coverUrl);
+            if (base64Image) {
+              setCoverImage(base64Image);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching cover image:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    }
-  }, [manga]);
+    };
 
-  const coverFileName = manga?.relationships.find(el => el.type === 'cover_art')?.attributes
-    .fileName;
-  const coverUrl = coverFileName
-    ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.512.jpg`
-    : '';
+    fetchCoverImage();
+  }, [manga]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -179,24 +187,28 @@ export default function GetMangaById() {
             <Card className="relative overflow-hidden border-0">
               {/* Background Image with Gradient */}
               <div className="absolute inset-0 z-0">
-                <Image
-                  src={getProxiedImageUrl(coverUrl)}
-                  alt="Background"
-                  fill
-                  className="object-cover blur-sm opacity-30"
-                />
+                {isLoading ? (
+                  <div className="w-full h-full bg-gray-200 animate-pulse" />
+                ) : (
+                  <Image
+                    src={coverImage}
+                    alt="Background"
+                    fill
+                    className="object-cover blur-sm opacity-30"
+                    priority
+                  />
+                )}
               </div>
 
               {/* Content */}
               <div className="relative z-10 p-6 flex flex-col md:flex-row gap-8">
                 {/* Cover Image */}
                 <div className="relative h-[400px] w-[280px] shrink-0 rounded-lg overflow-hidden shadow-xl">
-                  <Image
-                    alt="Cover"
-                    src={getProxiedImageUrl(coverUrl)}
-                    fill
-                    className="object-cover"
-                  />
+                  {isLoading ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse" />
+                  ) : (
+                    <Image alt="Cover" src={coverImage} fill className="object-cover" priority />
+                  )}
                 </div>
 
                 {/* Info */}
