@@ -26,7 +26,7 @@ const server = fastify({
 });
 
 server.register(cors, {
-  origin: process.env.NEXT_PUBLIC_FRONT_END_URL || "http://localhost:3011",
+  origin: process.env.FRONT_END_URL || "http://localhost:3011",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -67,7 +67,7 @@ server.get("/health", async () => {
 });
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3004;
-server.listen({ port, host: "0.0.0.0" }, (err, address) => {
+server.listen({ port, host: "127.0.0.1" }, (err, address) => {
   if (err) {
     console.error(err);
     process.exit(1);

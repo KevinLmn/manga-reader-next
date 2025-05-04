@@ -48,6 +48,6 @@ export const getLatestMangas = async (
   //   throw new Error("Something went wrong with the search");
   // }
 
-  const data = await fs.readFile(path.resolve("cache/latest.json"), "utf-8");
+  const data = await fs.readFile(path.resolve(__dirname, 'cache/latest.json'), "utf-8");
   return reply.send(JSON.parse(data));
 };

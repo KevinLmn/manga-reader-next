@@ -51,6 +51,9 @@ export const getPopularMangas = async (
 
   //   const manga: MangaDexResponse = resp.data;
   //   return { ...manga };
-  const data = await fs.readFile(path.resolve("cache/popular.json"), "utf-8");
+  const data = await fs.readFile(
+    path.resolve(__dirname, "cache/popular.json"),
+    "utf-8"
+  );
   return reply.send(JSON.parse(data));
 };

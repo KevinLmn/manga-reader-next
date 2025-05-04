@@ -496,9 +496,10 @@
           "pl",
           "fr",
           "id",
-          "es-la"
+          "es-la",
+          "vi"
         ],
-        "latestUploadedChapter": "4880b8be-1639-4c8d-abcc-c11b31c927cc"
+        "latestUploadedChapter": "6d140dce-3628-4381-99dc-97b4552adea5"
       },
       "relationships": [
         {
@@ -3375,7 +3376,7 @@
           "pl",
           "mn"
         ],
-        "latestUploadedChapter": "cd120967-f14b-48ce-bf15-e6a6d7e9b8cd"
+        "latestUploadedChapter": "95b8c565-dec1-4633-be69-2ca5ddf633c2"
       },
       "relationships": [
         {
@@ -5456,5 +5457,5 @@
   ],
   "limit": 20,
   "offset": 0,
-  "total": 65933
+  "total": 65937
 }
