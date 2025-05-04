@@ -2,7 +2,11 @@ import dotenv from "dotenv";
 import { FastifyReply, FastifyRequest } from "fastify";
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 import { MangaDexChapter } from "../utils.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -48,6 +52,9 @@ export const getLatestMangas = async (
   //   throw new Error("Something went wrong with the search");
   // }
 
-  const data = await fs.readFile(path.resolve(__dirname, 'cache/latest.json'), "utf-8");
+  const data = await fs.readFile(
+    path.resolve(__dirname, "../../cache/latest.json"),
+    "utf-8"
+  );
   return reply.send(JSON.parse(data));
 };

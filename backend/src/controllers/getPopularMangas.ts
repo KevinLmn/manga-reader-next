@@ -2,6 +2,10 @@ import dotenv from "dotenv";
 import { FastifyReply, FastifyRequest } from "fastify";
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 dotenv.config();
 
 // type MangaRequestBody = {
@@ -52,7 +56,7 @@ export const getPopularMangas = async (
   //   const manga: MangaDexResponse = resp.data;
   //   return { ...manga };
   const data = await fs.readFile(
-    path.resolve(__dirname, "cache/popular.json"),
+    path.resolve(__dirname, "../../cache/popular.json"),
     "utf-8"
   );
   return reply.send(JSON.parse(data));
