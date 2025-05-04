@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: manga-db-api
+    env: node
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/src/index.js
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3004
+      - key: MANGADEX_BASE_URL
+        value: https://api.mangadex.org
+      - key: MANGADEX_REFRESH_TOKEN_URL
+        value: https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: MANGADEX_USERNAME
+        sync: false
+      - key: MANGADEX_PASSWORD
+        sync: false
+      - key: MANGADEX_CLIENT_ID
+        sync: false
+      - key: MANGADEX_CLIENT_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_FRONT_END_URL
+        sync: false
+
+databases:
+  - name: manga-db
+    plan: free

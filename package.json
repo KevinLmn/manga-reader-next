@@ -1,0 +1,27 @@
+{
+  "name": "manga",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "packageManager": "pnpm@10.9.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"pnpm --filter frontend start\" \"pnpm --filter backend start\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.1.2",
+    "turbo": "^2.5.2"
+  },
+  "devDependencies": {
+    "knip": "^5.53.0"
+  }
+}

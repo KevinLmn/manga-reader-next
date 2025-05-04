@@ -1,0 +1,46 @@
+name: 🚀 Deploy Full Stack to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔐 SSH & Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: kevin
+          port: 22
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "📦 Pulling latest code..."
+            cd ~/apps/manga
+            git reset --hard HEAD
+            git clean -fd
+            git pull --rebase origin main
+
+            echo "🔧 Installing pnpm..."
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+            export PATH="$HOME/.local/share/pnpm:$PATH"
+
+            echo "📦 Installing dependencies..."
+            pnpm install --frozen-lockfile
+
+            echo "🏗️ Building full turborepo..."
+            pnpm run build
+
+            echo "⚙️ Running Prisma generate for backend..."
+            cd backend
+            pnpm prisma generate
+            cd ..
+
+            echo "🚀 Restarting backend with PM2..."
+            pm2 restart manga-back || pm2 start backend/dist/src/index.js --name manga-back
+
+            echo "🚀 Restarting frontend with PM2..."
+            pm2 restart manga-front || pm2 start pnpm --name manga-front -- run --filter=frontend start
