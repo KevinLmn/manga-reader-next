@@ -5,14 +5,14 @@ import path from "path";
 
 dotenv.config();
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3012";
+const BACK_END_URL = process.env.BACK_END_URL || "http://localhost:3012";
 
 async function warmCache() {
   console.log("🔄 Warming cache...");
 
   const includes = ["author", "cover_art"];
   const contentRating = ["safe"];
-  const loginResponse = await axios.post(`${BACKEND_URL}/login`, {
+  const loginResponse = await axios.post(`${BACK_END_URL}/login`, {
     email: "notneeded@gmail.com",
     password: "notneeded",
   });
