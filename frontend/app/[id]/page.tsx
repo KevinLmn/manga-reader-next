@@ -1,7 +1,7 @@
 'use client';
 import { ChapterList } from '@/app/(features)/chapters/chapter-list';
 import { Card } from '@/app/components/ui/card';
-import { axiosInterceptorInstance } from '@/lib/interceptor';
+import api from '@/lib/interceptor';
 import { getProxiedImageUrl } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -57,7 +57,7 @@ export default function GetMangaById() {
 
   const fetchChapters = async () => {
     try {
-      const response = await axiosInterceptorInstance.post(`/manga/${id}?downloaded=false`, {
+      const response = await api.post(`/manga/${id}?downloaded=false`, {
         limit: LIMIT,
         offset: page - 1,
       });
@@ -72,7 +72,7 @@ export default function GetMangaById() {
   const downloadChapter = async (chapterId: string) => {
     try {
       toast.info('Starting download...');
-      const response = await axiosInterceptorInstance.get(`/manga/${id}/download/${chapterId}`, {
+      const response = await api.get(`/manga/${id}/download/${chapterId}`, {
         responseType: 'blob',
       });
 

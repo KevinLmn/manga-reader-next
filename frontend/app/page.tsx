@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from '@/app/components/ui/carousel';
 import { Loading } from '@/app/components/ui/loading';
-import { useLatestManga, usePopularManga } from '@/features/manga/hooks/use-manga-queries';
+import { useLatestManga, usePopularManga } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
@@ -147,10 +147,10 @@ export default function List() {
             <CarouselNext className="right-2 absolute z-20 top-1/2 transform -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full" />
           </Carousel>
         </div>
+        {popularMangas && <MangaSection mangas={popularMangas} sectionType={SectionType.Popular} />}
         {latestMangas && (
           <MangaSection mangas={latestMangas} sectionType={SectionType.LatestUpdates} />
         )}
-        {popularMangas && <MangaSection mangas={popularMangas} sectionType={SectionType.Popular} />}
       </div>
     </div>
   );

@@ -1,36 +1,28 @@
 {
   "dependencies": {
     "@fastify/cors": "^9.0.1",
-    "@fastify/static": "^6.12.0",
     "@prisma/client": "^6.7.0",
-    "@types/chai": "^4.3.20",
-    "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.32",
     "axios": "^1.7.2",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
-    "esm": "^3.2.25",
     "fastify": "^4.27.0",
-    "fastify-static": "^4.7.0",
     "fs": "^0.0.1-security",
-    "mocha": "^10.8.2",
+    "node-cron": "^3.0.3",
     "semver": "^7.5.4",
     "sharp": "^0.34.1",
-    "supertest": "^7.1.0",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5"
   },
   "type": "module",
   "devDependencies": {
-    "@types/sharp": "^0.32.0",
     "prisma": "^6.7.0",
     "tsx": "^4.19.4"
   },
   "scripts": {
-    "dev": "nodemon",
+    "dev": "tsx src/index.ts",
     "build": "tsc --project tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "warm-cache": "tsx src/scripts/warmCache.ts"
   },
   "name": "backend",
   "version": "1.0.0",

@@ -1,4 +1,5 @@
 'use client';
+import { cleanOldEntries } from '@/lib/indexedDB';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -95,6 +96,7 @@ const Page = () => {
 
   useEffect(() => {
     fetchChapters();
+
   }, [id, chapterNumber]);
 
   const handleNextChapter = () => {

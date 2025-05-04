@@ -12,7 +12,10 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"pnpm --filter frontend start\" \"pnpm --filter backend start\""
+    "start": "concurrently \"pnpm --filter frontend start\" \"pnpm --filter backend start\"",
+    "knip:frontend": "cd frontend && pnpm knip --config knip.frontend.ts",
+    "knip:backend": "knip --config backend/knip.backend.ts",
+    "knip": "pnpm knip:frontend && cd .. && pnpm knip:backend"
   },
   "keywords": [],
   "author": "",

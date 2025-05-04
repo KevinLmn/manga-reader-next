@@ -4,7 +4,7 @@ import Dexie from 'dexie';
  * Cache duration constants (in milliseconds)
  */
 const CACHE_DURATION = {
-  SHORT: 5 * 60 * 1000, // 5 minutes
+  SHORT: 10 * 60 * 1000, // 10 minutes
   MEDIUM: 30 * 60 * 1000, // 30 minutes
   LONG: 24 * 60 * 60 * 1000, // 24 hours
   IMAGE: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -118,10 +118,9 @@ export const cleanOldEntries = async (): Promise<void> => {
   try {
     const now = Date.now();
 
-    // Clean images (longer retention)
     const oldImages = await db.images
       .where('timestamp')
-      .below(now - CACHE_DURATION.IMAGE)
+      .below(now - CACHE_DURATION.SHORT)
       .toArray();
 
     if (oldImages.length > 0) {
@@ -129,10 +128,9 @@ export const cleanOldEntries = async (): Promise<void> => {
       console.log(`Cleaned ${oldImages.length} old images from cache`);
     }
 
-    // Clean metadata (shorter retention)
     const oldMetadata = await db.metadata
       .where('timestamp')
-      .below(now - CACHE_DURATION.MEDIUM)
+      .below(now - CACHE_DURATION.SHORT)
       .toArray();
 
     if (oldMetadata.length > 0) {

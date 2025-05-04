@@ -1,14 +1,15 @@
-import { cn } from '@/lib/utils';
+import Link from 'next/link';
 import * as React from 'react';
 import { Button } from './button';
 
 interface PaginationProps {
   totalPages: number;
   page: number;
-  setPage: (page: number) => void;
+  mangaId: string;
+  chapterId: string;
 }
 
-const CustomPagination = ({ totalPages, page, setPage }: PaginationProps) => {
+const CustomPagination = ({ mangaId, totalPages, page, chapterId }: PaginationProps) => {
   const pageNumbers: (number | string)[] = [];
   //   const totalPages = Math.ceil(total / LIMIT);
   //   console.log(numberOfChapters);
@@ -37,38 +38,39 @@ const CustomPagination = ({ totalPages, page, setPage }: PaginationProps) => {
     <div className="flex justify-center mt-8">
       <nav className="flex items-center space-x-2" aria-label="Pagination">
         {page > 1 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(page - 1)}
-            className={cn('h-8 w-8 p-0')}
-          >
-            <span className="sr-only">Previous page</span>
-            <ChevronLeftIcon className="h-4 w-4" />
-          </Button>
+          <Link href={`/${mangaId}/chapter/${chapterId}/${page - 1}`}>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <ChevronLeftIcon className="h-4 w-4" />
+            </Button>
+          </Link>
         )}
-        {pageNumbers.map((number, index) => (
-          <Button
-            key={index}
-            variant={number === page ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => typeof number === 'number' && setPage(number)}
-            disabled={typeof number !== 'number'}
-            className={cn('h-8 w-8 p-0', typeof number !== 'number' && 'cursor-default')}
-          >
-            {number}
-          </Button>
-        ))}
+        {pageNumbers.map((number, index) =>
+          typeof number === 'number' ? (
+            <Link
+              key={index}
+              href={`/${mangaId}/chapter/${chapterId}/${number}`}
+              className="h-8 w-8"
+            >
+              <Button
+                variant={number === page ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                {number}
+              </Button>
+            </Link>
+          ) : (
+            <Button key={index} variant="ghost" size="sm" disabled className="h-8 w-8 p-0">
+              {number}
+            </Button>
+          )
+        )}
         {page < totalPages && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(page + 1)}
-            className={cn('h-8 w-8 p-0')}
-          >
-            <span className="sr-only">Next page</span>
-            <ChevronRightIcon className="h-4 w-4" />
-          </Button>
+          <Link href={`/${mangaId}/chapter/${chapterId}/${page + 1}`}>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <ChevronRightIcon className="h-4 w-4" />
+            </Button>
+          </Link>
         )}
       </nav>
     </div>
