@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { motion } from 'framer-motion';
 
 const Menu = ({ openMenu, setOpenMenu }: { openMenu: boolean; setOpenMenu: (openMenu: boolean) => void }) => {
-  console.log(openMenu);
   return (
     <>
       <motion.div

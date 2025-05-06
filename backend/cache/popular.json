@@ -3376,7 +3376,7 @@
           "pl",
           "mn"
         ],
-        "latestUploadedChapter": "95b8c565-dec1-4633-be69-2ca5ddf633c2"
+        "latestUploadedChapter": "dca7b323-203c-4309-92c3-b781698e6b4a"
       },
       "relationships": [
         {
@@ -5457,5 +5457,5 @@
   ],
   "limit": 20,
   "offset": 0,
-  "total": 65937
+  "total": 65944
 }

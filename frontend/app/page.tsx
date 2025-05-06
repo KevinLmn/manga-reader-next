@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from '@/app/components/ui/carousel';
 import { Loading } from '@/app/components/ui/loading';
-import { useLatestManga, usePopularManga } from '@/lib/queries';
+import { useLatestManga, usePopularManga, usePrefetchMangaDetails } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
@@ -48,10 +48,15 @@ interface Manga {
 
 export default function List() {
   // const [openMenu, setOpenMenu] = useState(false);
-  const { data: latestMangas, isLoading: isLoadingLatest } = useLatestManga();
-  const { data: popularMangas, isLoading: isLoadingPopular } = usePopularManga();
+  const { data: popularMangas, isLoading: isPopularLoading } = usePopularManga();
+  const { data: latestMangas, isLoading: isLatestLoading } = useLatestManga();
+  const prefetchManga = usePrefetchMangaDetails();
 
-  if (isLoadingLatest || isLoadingPopular) {
+  const handleMangaHover = (mangaId: string) => {
+    prefetchManga(mangaId);
+  };
+
+  if (isPopularLoading || isLatestLoading) {
     return <Loading />;
   }
 
@@ -89,7 +94,11 @@ export default function List() {
           >
             <CarouselContent className="w-full h-full absolute left-0 flex ml-0" style={{}}>
               {popularMangas?.map((manga: Manga, index: number) => (
-                <CarouselItem key={index} className="w-full h-full flex relative left-0 pl-0">
+                <CarouselItem
+                  key={index}
+                  className="w-full h-full flex relative left-0 pl-0"
+                  onMouseEnter={() => handleMangaHover(manga.id)}
+                >
                   <div className="w-full h-full absolute z-10 quick-opacity-gradient"></div>
                   <Link
                     href={`/${manga.id}`}
@@ -147,9 +156,11 @@ export default function List() {
             <CarouselNext className="right-2 absolute z-20 top-1/2 transform -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full" />
           </Carousel>
         </div>
-        {popularMangas && <MangaSection mangas={popularMangas} sectionType={SectionType.Popular} />}
+        {popularMangas && (
+          <MangaSection mangas={popularMangas} sectionType={SectionType.Popular} isLoading={isPopularLoading} />
+        )}
         {latestMangas && (
-          <MangaSection mangas={latestMangas} sectionType={SectionType.LatestUpdates} />
+          <MangaSection mangas={latestMangas} sectionType={SectionType.LatestUpdates} isLoading={isLatestLoading} />
         )}
       </div>
     </div>

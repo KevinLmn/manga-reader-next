@@ -20,6 +20,7 @@ To read more about using these font, please visit the Next.js documentation:
 'use client';
 import { Download } from 'lucide-react';
 import Link from 'next/link';
+import { useRef } from 'react';
 import CustomPagination from './Pagination/pagination';
 
 const LIMIT = 24;
@@ -47,8 +48,31 @@ interface ChapterListProps {
   setPage: (page: number) => void;
   total: number;
   mangaId: string;
-  downloadChapter: (chapter: string) => void;
-  setChapter: (chapters: Chapter[]) => void;
+  downloadChapter: (chapterId: string) => void;
+  setChapter: (chapter: Chapter) => void;
+  onChapterHover?: (chapterId: string) => void;
+}
+
+function useDebouncedHover(callback: (id: string) => void, delay = 300) {
+  const timeoutMap = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  const handleMouseEnter = (id: string) => {
+    const timeout = setTimeout(() => {
+      callback(id);
+      timeoutMap.current.delete(id);
+    }, delay);
+    timeoutMap.current.set(id, timeout);
+  };
+
+  const handleMouseLeave = (id: string) => {
+    const timeout = timeoutMap.current.get(id);
+    if (timeout) {
+      clearTimeout(timeout);
+      timeoutMap.current.delete(id);
+    }
+  };
+
+  return { handleMouseEnter, handleMouseLeave };
 }
 
 export function ChapterList({
@@ -59,12 +83,10 @@ export function ChapterList({
   mangaId,
   downloadChapter,
   setChapter,
+  onChapterHover,
 }: ChapterListProps) {
   const totalPages = Math.ceil(total / LIMIT);
-  let numberOfChapters = 0;
-  while (chapters[numberOfChapters]?.attributes.chapter) {
-    numberOfChapters++;
-  }
+  const { handleMouseEnter, handleMouseLeave } = useDebouncedHover(onChapterHover || (() => {}));
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6 md:py-12">
@@ -79,6 +101,8 @@ export function ChapterList({
               <div
                 key={chapter.id}
                 className="group bg-white rounded-xl shadow-sm dark:bg-gray-800 overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+                onMouseEnter={() => handleMouseEnter(chapter.id)}
+                onMouseLeave={() => handleMouseLeave(chapter.id)}
               >
                 <Link
                   href={`/${mangaId}/chapter/${chapter.id}/1`}

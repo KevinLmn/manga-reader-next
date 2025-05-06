@@ -1,37 +1,52 @@
-import { getImageFromDB, getMetadataFromDB, setImageInDB, setMetadataInDB } from '@/lib/indexedDB';
+import {
+  getImageFromDB,
+  getTotalPagesFromDB,
+  setImageInDB,
+  setTotalPagesInDB,
+} from '@/lib/indexedDB';
 import api from '@/lib/interceptor';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-const toBase64 = (buffer: ArrayBuffer): string => {
+type PageImageData = {
+  base64: string;
+  numberOfPages: number;
+};
+
+const toBase64 = (buffer: ArrayBuffer | { type: string; data: number[] }): string => {
+  let byteArray: Uint8Array;
+
+  if ('type' in buffer && Array.isArray((buffer as any).data)) {
+    byteArray = new Uint8Array((buffer as any).data);
+  } else {
+    byteArray = new Uint8Array(buffer as ArrayBuffer);
+  }
+
   let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i] ?? 0);
+  for (let i = 0; i < byteArray.byteLength; i++) {
+    binary += String.fromCharCode(byteArray[i] ?? 0);
   }
   return `data:image/jpeg;base64,${btoa(binary)}`;
 };
-const fetchImage = async (chapterId: string, page: number, quality: string) => {
+
+const fetchImageAndTotalPages = async (
+  chapterId: string,
+  page: number,
+  quality: string
+): Promise<PageImageData> => {
   const key = `/manga/chapter/${chapterId}/${page}?quality=${quality}`;
   const cached = await getImageFromDB(key);
-  if (cached) return cached;
-
-  const { data } = await api.get(key);
-  console.log(data, 'data');
-  const res = await api.get(`/proxy/image?url=${encodeURIComponent(data.url)}`, {
-    responseType: 'arraybuffer',
-  });
-  try {
-    console.log(res.data, 'res.data');
-    const base64 = toBase64(res.data);
-
-    await setImageInDB(key, base64);
-    return base64;
-  } catch (error) {
-    console.log(error);
+  if (cached) {
+    const totalPages = await getTotalPagesFromDB(`/manga/chapter/${chapterId}/total`);
+    return { base64: cached, numberOfPages: totalPages ? Number(totalPages) : 0 };
   }
-  throw new Error('Failed to fetch image');
+  const { data } = await api.get(key);
+  const base64 = toBase64(data.buffer);
+
+  await setImageInDB(key, base64);
+  await setTotalPagesInDB(`/manga/chapter/${chapterId}/total`, data.numberOfPages);
+
+  return { base64, numberOfPages: data.numberOfPages };
 };
 
 const fetchFromCache = async (key: string) => {
@@ -43,8 +58,8 @@ export function useLatestManga() {
   return useQuery({
     queryKey: ['latest-manga'],
     queryFn: () => fetchFromCache('latest'),
-    staleTime: 1000 * 60 * 60 * 6, // 6h
-    gcTime: 1000 * 60 * 60 * 12, // Keep in memory 12h
+    staleTime: 1000 * 60 * 60 * 1, // 1h
+    gcTime: 1000 * 60 * 60 * 2, // Keep in memory 2h
   });
 }
 
@@ -52,49 +67,77 @@ export function usePopularManga() {
   return useQuery({
     queryKey: ['popular-manga'],
     queryFn: () => fetchFromCache('popular'),
-    staleTime: 1000 * 60 * 60 * 6,
-    gcTime: 1000 * 60 * 60 * 12,
+    staleTime: 1000 * 60 * 60 * 1,
+    gcTime: 1000 * 60 * 60 * 2,
   });
 }
 
-export const useCurrentPageImage = (chapterId: string, page: number, quality: string) =>
-  useQuery({
+export const useCurrentPageImage = (chapterId: string, page: number, quality: string) => {
+  return useQuery({
     queryKey: ['page-image', chapterId, page, quality],
-    queryFn: () => fetchImage(chapterId, page, quality),
-    staleTime: 1000 * 60 * 60 * 6, // 6 hours
-    gcTime: 1000 * 60 * 60 * 12, // 12 hours
+    queryFn: () => fetchImageAndTotalPages(chapterId, page, quality),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
-
-export const useChapterTotalPages = (chapterId: string) =>
-  useQuery({
-    queryKey: ['chapter-total', chapterId],
-    queryFn: async () => {
-      const key = `/manga/chapter/${chapterId}/total`;
-      console.log('key', key);
-      const cached = await getMetadataFromDB(key);
-      if (cached) return Number(cached);
-      const { data } = await api.get(`/manga/chapter/${chapterId}/1`);
-      await setMetadataInDB(key, data.numberOfPages);
-      return data.numberOfPages;
-    },
-    staleTime: 1000 * 60 * 60 * 6,
-    gcTime: 1000 * 60 * 60 * 12,
-  });
+};
 
 export const usePrefetchAdjacentPages = (chapterId: string, page: number, quality: string) => {
   const client = useQueryClient();
-  const pagesToPrefetch = [page + 1, page + 2, page - 1];
   useEffect(() => {
-    console.log('chapterId', chapterId, page, quality);
+    const pagesToPrefetch = [page + 1, page + 2, page - 1];
     pagesToPrefetch.forEach(p => {
-      if (p > 0) {
+      if (p > 0 && !client.getQueryData(['page-image', chapterId, p, quality])) {
         client.prefetchQuery({
           queryKey: ['page-image', chapterId, p, quality],
-          queryFn: () => fetchImage(chapterId, p, quality),
-          staleTime: 1000 * 60 * 60 * 6,
-          gcTime: 1000 * 60 * 60 * 12,
+          queryFn: () => fetchImageAndTotalPages(chapterId, p, quality),
+          staleTime: 1000 * 60 * 5,
+          gcTime: 1000 * 60 * 10,
         });
       }
     });
-  }, [chapterId, page, quality]);
+  }, [chapterId, page, quality, client]);
+};
+
+export const useMangaDetails = (mangaId: string, page: number = 1) =>
+  useQuery({
+    queryKey: ['manga-details', mangaId, page],
+    queryFn: async () => {
+      const { data } = await api.post(`/manga/${mangaId}?downloaded=false`, {
+        limit: 24,
+        offset: page - 1,
+      });
+      return data;
+    },
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 2,
+  });
+
+export const usePrefetchMangaDetails = () => {
+  const queryClient = useQueryClient();
+
+  return async (mangaId: string) => {
+    await queryClient.prefetchQuery({
+      queryKey: ['manga-details', mangaId, 1],
+      queryFn: async () => {
+        const { data } = await api.post(`/manga/${mangaId}?downloaded=false`, {
+          limit: 24,
+          offset: 0,
+        });
+        return data;
+      },
+    });
+  };
+};
+
+export const usePrefetchFirstPage = (quality: string = 'high') => {
+  const client = useQueryClient();
+
+  return (chapterId: string) => {
+    client.prefetchQuery({
+      queryKey: ['page-image', chapterId, 1, quality],
+      queryFn: () => fetchImageAndTotalPages(chapterId, 1, quality),
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 10,
+    });
+  };
 };

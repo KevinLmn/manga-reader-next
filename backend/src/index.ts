@@ -1,24 +1,14 @@
 import cors from "@fastify/cors";
 import fastify from "fastify";
-import { downloadChapterController } from "./controllers/downloadChapter.js";
-import { getChapterController } from "./controllers/getChapter.js";
-import { getChapterPage } from "./controllers/getChapterPage.js";
-import { getLatestMangas } from "./controllers/getLatestMangas.js";
+import { downloadChapterController } from "./controllers/downloadChapterController.js";
+import { getChapterPageController } from "./controllers/getChapterPageController.js";
+import { getLatestMangas } from "./controllers/getLatestMangasController.js";
 import { getMangaController } from "./controllers/getMangaController.js";
-import { getPopularMangas } from "./controllers/getPopularMangas.js";
-import { loginController } from "./controllers/login.js";
-import { refreshTokenController } from "./controllers/refreshToken.js";
-import { searchMangaController } from "./controllers/searchMangaController.js";
+import { getPopularMangas } from "./controllers/getPopularMangasController.js";
+import { loginController } from "./controllers/loginController.js";
+import { refreshTokenController } from "./controllers/refreshTokenController.js";
 import { loginMiddleware } from "./middlewares.js";
 import { proxyRoutes } from "./routes/proxy.js";
-
-// declare module "fastify" {
-//   interface FastifyRequest {
-//     session: {
-//       authToken?: string;
-//     };
-//   }
-// }
 
 const server = fastify({
   logger: true,
@@ -44,13 +34,9 @@ server.post("/refreshToken", refreshTokenController);
 
 server.post("/login", loginController);
 
-server.post("/manga", searchMangaController);
-
 server.post("/manga/:id", getMangaController);
 
-server.get("/manga/:id/chapter/:chapterNumber", getChapterController);
-
-server.get("/manga/chapter/:chapterId/:chapterPage", getChapterPage);
+server.get("/manga/chapter/:chapterId/:chapterPage", getChapterPageController);
 
 server.get("/manga/:id/download/:chapterId", downloadChapterController);
 

@@ -2,6 +2,7 @@ import { Chapter as PrismaChapter } from "@prisma/client";
 import axios from "axios";
 import { FastifyRequest } from "fastify";
 import prisma from "../prisma.js";
+import redis from "../redis.js";
 
 type MangaIdRequestBody = {
   limit: number;
@@ -92,18 +93,27 @@ const getDownloadedScansController = async (
   const { id } = request.params;
   const { limit, offset } = request.body;
 
+  const cacheKey = `manga:${id}:downloaded:${limit}:${offset}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
   const chapters = await prisma.chapter.findMany({
     where: {
       mangaId: id,
     },
   });
 
-  return {
+  const result = {
     chaptersLength: chapters.length,
     chapters: chapters
       .sort((a, b) => b.number - a.number)
       .slice(offset * limit, Math.min(offset * limit + limit, chapters.length)),
   };
+
+  await redis.set(cacheKey, JSON.stringify(result), "EX", 24 * 60 * 60); // Cache for 24 minutes
+  return result;
 };
 
 const getNotDownloadedScansByMangaId = async (
@@ -112,6 +122,12 @@ const getNotDownloadedScansByMangaId = async (
   const { id } = request.params;
   const { limit, offset } = request.body;
   const token = request.headers.authorization;
+
+  const cacheKey = `manga:${id}:not-downloaded:${limit}:${offset}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
 
   try {
     const resp = await axios.get(
@@ -140,8 +156,10 @@ const getNotDownloadedScansByMangaId = async (
         },
       }
     );
-    console.log(responseMangaDetail.data);
-    return { manga: responseMangaDetail.data, chapters: resp.data };
+
+    const result = { manga: responseMangaDetail.data, chapters: resp.data };
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 24 * 60 * 60); // Cache for 24 hours
+    return result;
   } catch (e) {
     console.error(e);
     throw new Error("Manga not found");

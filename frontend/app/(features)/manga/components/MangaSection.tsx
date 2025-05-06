@@ -1,5 +1,7 @@
 'use client';
+import { Loading } from '@/app/components/ui/loading';
 import { Reveal } from '@/app/components/ui/Reveal';
+import { usePrefetchMangaDetails } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -37,15 +39,17 @@ interface Manga {
 interface MangaSectionProps {
   mangas: Manga[];
   sectionType: SectionType;
+  isLoading: boolean;
 }
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
-const MangaSection = ({ mangas, sectionType }: MangaSectionProps) => {
+const MangaSection = ({ mangas, sectionType, isLoading }: MangaSectionProps) => {
   const [coverUrls, setCoverUrls] = useState<Record<string, string>>({});
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
   const [errorImages, setErrorImages] = useState<Record<string, boolean>>({});
+  const prefetchManga = usePrefetchMangaDetails();
 
   useEffect(() => {
     const newCoverUrls: Record<string, string> = {};
@@ -85,6 +89,15 @@ const MangaSection = ({ mangas, sectionType }: MangaSectionProps) => {
       return `${seconds} seconds ago`;
     }
   };
+
+  const handleMangaHover = (mangaId: string) => {
+    prefetchManga(mangaId);
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <div className="text-white p-4 mt-4">
       <Reveal>
@@ -98,6 +111,7 @@ const MangaSection = ({ mangas, sectionType }: MangaSectionProps) => {
             key={manga.id}
             style={{ width: 350, height: 550 }}
             className="rounded-lg overflow-hidden bg-neutral-800 shadow-manga-list w-[160px] h-[280px]"
+            onMouseEnter={() => handleMangaHover(manga.id)}
           >
             <Link href={`/${manga.id}`} className="h-full flex flex-col">
               {loadingImages[manga.id] ? (

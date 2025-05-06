@@ -2,7 +2,7 @@
 import { Button } from '@/app/components/ui/button';
 import CustomPagination from '@/app/components/ui/pagination';
 import { cleanOldEntries } from '@/lib/indexedDB';
-import { useChapterTotalPages, useCurrentPageImage, usePrefetchAdjacentPages } from '@/lib/queries';
+import { useCurrentPageImage, usePrefetchAdjacentPages } from '@/lib/queries';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -20,8 +20,8 @@ export default function GetMangaPage() {
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   const safeChapterId = typeof chapterId === 'string' ? chapterId : '';
-  const { data: image, isLoading } = useCurrentPageImage(safeChapterId, page, quality);
-  const { data: total } = useChapterTotalPages(safeChapterId);
+  const { data: pageData, isLoading } = useCurrentPageImage(safeChapterId, page, quality);
+  const total = pageData?.numberOfPages || 0;
 
   usePrefetchAdjacentPages(safeChapterId, page, quality);
 
@@ -31,19 +31,17 @@ export default function GetMangaPage() {
       const base = `/${id}/chapter/${chapterId}`;
       if ((e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') && page > 1)
         window.location.href = `${base}/${page - 1}`;
-      else if ((e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') && page < Number(total))
+      else if ((e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') && page < total)
         window.location.href = `${base}/${page + 1}`;
       else if (e.key.toLowerCase() === 'h')
         setQuality(q => (q === Quality.HIGH ? Quality.LOW : Quality.HIGH));
       else if (e.key === 'Home' && page > 1) window.location.href = `${base}/1`;
-      else if (e.key === 'End' && page < Number(total)) window.location.href = `${base}/${total}`;
+      else if (e.key === 'End' && page < total) window.location.href = `${base}/${total}`;
       else if (e.key === 'Escape') window.location.href = `/${id}`;
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [id, chapterId, page, total]);
-
-  console.log(image, isLoading);
 
   useEffect(() => {
     cleanOldEntries();
@@ -149,9 +147,9 @@ export default function GetMangaPage() {
       <main className="flex-1 flex flex-col items-center justify-center pt-16 pb-16 relative cursor-pointer">
         <div
           className="max-w-4xl w-full mx-auto px-4 transition-opacity duration-300"
-          style={{ opacity: image ? 1 : 0 }}
+          style={{ opacity: pageData?.base64 ? 1 : 0 }}
         >
-          {image ? (
+          {pageData?.base64 ? (
             <div className="relative shadow-2xl">
               {page > 1 && (
                 <Link
@@ -161,7 +159,7 @@ export default function GetMangaPage() {
                   <span className="block h-full w-full" />
                 </Link>
               )}
-              {page < Number(total) && (
+              {page < total && (
                 <Link
                   href={`/${id}/chapter/${chapterId}/${page + 1}`}
                   className="absolute right-0 top-0 h-full w-1/2 z-10"
@@ -170,7 +168,7 @@ export default function GetMangaPage() {
                 </Link>
               )}
               <Image
-                src={image}
+                src={pageData.base64}
                 alt={`Chapter page ${page}`}
                 width={1080}
                 height={0}

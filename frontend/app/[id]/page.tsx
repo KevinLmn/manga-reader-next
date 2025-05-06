@@ -2,6 +2,7 @@
 import { ChapterList } from '@/app/(features)/chapters/chapter-list';
 import { Card } from '@/app/components/ui/card';
 import api from '@/lib/interceptor';
+import { useMangaDetails, usePrefetchFirstPage } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -9,8 +10,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-const LIMIT = 24;
 
 interface Chapter {
   id: string;
@@ -20,7 +19,6 @@ interface Chapter {
     volume: string;
     pages: number;
     publishAt: string;
-    id: string;
   };
 }
 
@@ -44,30 +42,13 @@ interface Manga {
 }
 
 export default function GetMangaById() {
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [manga, setManga] = useState<Manga>({
-    id: '',
-    relationships: [],
-  });
   const [coverImage, setCoverImage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { id } = useParams();
 
-  const fetchChapters = async () => {
-    try {
-      const response = await api.post(`/manga/${id}?downloaded=false`, {
-        limit: LIMIT,
-        offset: page - 1,
-      });
-      setManga(response.data.manga.data);
-      setChapters(response.data.chapters.data);
-      setTotal(response.data.chapters.total);
-    } catch (err) {
-      toast.error('Failed to fetch chapters');
-    }
-  };
+  const { data, isLoading: isDataLoading } = useMangaDetails(id as string, page);
+  const prefetchFirstPage = usePrefetchFirstPage();
 
   const downloadChapter = async (chapterId: string) => {
     try {
@@ -76,7 +57,7 @@ export default function GetMangaById() {
         responseType: 'blob',
       });
 
-      const chapter = chapters.find(c => c.id === chapterId);
+      const chapter = data?.chapters.data.find((c: Chapter) => c.id === chapterId);
       if (!chapter) {
         throw new Error('Chapter not found');
       }
@@ -86,7 +67,7 @@ export default function GetMangaById() {
 
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${manga.attributes?.title?.en || 'manga'}_chapter_${chapter.attributes.chapter}.png`;
+      link.download = `${data?.manga.data.attributes?.title?.en || 'manga'}_chapter_${chapter.attributes.chapter}.png`;
       document.body.appendChild(link);
       link.click();
 
@@ -100,17 +81,15 @@ export default function GetMangaById() {
   };
 
   useEffect(() => {
-    fetchChapters();
-  }, [page]);
-
-  useEffect(() => {
     const fetchCoverImage = async () => {
-      if (manga.id && manga.relationships?.length > 0) {
+      if (data?.manga.data.id && data?.manga.data.relationships?.length > 0) {
         setIsLoading(true);
         try {
-          const coverArt = manga.relationships.find(el => el.type === 'cover_art');
+          const coverArt = data.manga.data.relationships.find(
+            (el: { type: string }) => el.type === 'cover_art'
+          );
           if (coverArt) {
-            const coverUrl = `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
+            const coverUrl = `https://uploads.mangadex.org/covers/${data.manga.data.id}/${coverArt.attributes.fileName}.512.jpg`;
             const base64Image = await getProxiedImageUrl(coverUrl);
             if (base64Image) {
               setCoverImage(base64Image);
@@ -125,7 +104,11 @@ export default function GetMangaById() {
     };
 
     fetchCoverImage();
-  }, [manga]);
+  }, [data?.manga.data]);
+
+  if (isDataLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6 md:py-12">
@@ -142,16 +125,16 @@ export default function GetMangaById() {
           ) : (
             <Image
               src={coverImage}
-              alt={manga.attributes?.title?.en || 'Manga Cover'}
+              alt={data?.manga.data.attributes?.title?.en || 'Manga Cover'}
               width={300}
               height={450}
               className="aspect-[2/3] w-full rounded-lg object-cover"
             />
           )}
           <div className="mt-4">
-            <h1 className="text-2xl font-bold">{manga.attributes?.title?.en}</h1>
+            <h1 className="text-2xl font-bold">{data?.manga.data.attributes?.title?.en}</h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              {manga.attributes?.description?.en}
+              {data?.manga.data.attributes?.description?.en}
             </p>
           </div>
         </Card>
@@ -160,13 +143,14 @@ export default function GetMangaById() {
             <h2 className="text-2xl font-bold">Chapters</h2>
           </div>
           <ChapterList
-            chapters={chapters}
+            chapters={data?.chapters.data || []}
             page={page}
             setPage={setPage}
-            total={total}
+            total={data?.chapters.total || 0}
             mangaId={id as string}
             downloadChapter={downloadChapter}
-            setChapter={setChapters}
+            setChapter={() => {}}
+            onChapterHover={prefetchFirstPage}
           />
         </div>
       </div>

@@ -29,6 +29,7 @@
     "flowbite": "^2.3.0",
     "flowbite-react": "^0.9.0",
     "framer-motion": "^11.2.10",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.383.0",
     "next": "14.2.3",
     "prettier": "^3.5.3",

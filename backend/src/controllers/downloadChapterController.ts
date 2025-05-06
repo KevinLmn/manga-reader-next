@@ -25,12 +25,10 @@ export const downloadChapterController = async (
     const mangaDexService = new MangaDexService();
     const imageService = new ImageService();
 
-    // Get chapter download links
     console.log("Fetching chapter download links...");
     const links = await mangaDexService.getChapterDownloadLinks(chapterId);
     console.log(`Got ${links.length} download links`);
 
-    // Set response headers
     if (!reply.raw.headersSent) {
       reply.raw.writeHead(200, {
         "Access-Control-Allow-Origin": `${process.env.NEXT_PUBLIC_FRONT_END_URL}`,
