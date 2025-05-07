@@ -4,35 +4,43 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
-    container_name: manga-backend
+      dockerfile: backend/Dockerfile.dev
+    container_name: manga-backend-dev
     ports:
       - "3012:3012"
     environment:
       - REDIS_URL=redis://redis:6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
     depends_on:
       - redis
       - postgres
-    restart: unless-stopped
+    command: pnpm --filter backend dev
 
   frontend:
     build:
       context: .
-      dockerfile: frontend/Dockerfile
-    container_name: manga-frontend
+      dockerfile: frontend/Dockerfile.dev
+    container_name: manga-frontend-dev
     ports:
       - "3011:3011"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
     depends_on:
       - backend
-    restart: unless-stopped
+    command: pnpm --filter frontend dev
 
   redis:
     image: redis:7-alpine
-    container_name: manga-redis
+    container_name: manga-redis-dev
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass $REDIS_PASSWORD
@@ -42,7 +50,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: manga-postgres
+    container_name: manga-postgres-dev
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

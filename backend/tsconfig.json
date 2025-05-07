@@ -1,8 +1,8 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "sourceMap": true,
     "types": ["node"],
     "baseUrl": ".",
@@ -12,8 +12,8 @@
       "*": ["../node_modules/*"]
     }
   },
-  "include": ["src/**/*", "src/test/**/*"],
-  "exclude": ["dist"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
   "scripts": {
     "knip": "knip"
   }

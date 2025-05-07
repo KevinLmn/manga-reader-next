@@ -1,8 +1,8 @@
 'use client';
-import { Loading } from '@/app/components/ui/loading';
-import { Reveal } from '@/app/components/ui/Reveal';
-import { usePrefetchMangaDetails } from '@/lib/queries';
-import { getProxiedImageUrl } from '@/lib/utils';
+import { Loading } from '@components/ui/loading';
+import { Reveal } from '@components/ui/Reveal';
+import { usePrefetchMangaDetails } from '@lib/queries';
+import { getProxiedImageUrl } from '@lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';

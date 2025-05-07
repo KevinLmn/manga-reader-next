@@ -18,31 +18,39 @@ jobs:
           port: 22
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
+
             echo "📦 Pulling latest code..."
             cd ~/apps/manga
             git reset --hard HEAD
             git clean -fd
             git pull --rebase origin main
 
-            echo "🔧 Installing pnpm..."
+            echo "📦 Installing dependencies..."
             curl -fsSL https://get.pnpm.io/install.sh | sh -
             export PATH="$HOME/.local/share/pnpm:$PATH"
-
-            echo "📦 Installing dependencies..."
             pnpm install --frozen-lockfile
 
-            echo "🏗️ Building full turborepo..."
-            pnpm run build
+            echo "🐳 Checking Docker..."
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+              sudo usermod -aG docker $USER
+              newgrp docker
+            fi
 
-            echo "🧹 Cleaning previous PM2 apps..."
-            pm2 delete manga-back || true
-            pm2 delete manga-front || true
+            echo "🐳 Checking Docker Compose plugin..."
+            if ! docker compose version &> /dev/null; then
+              echo "Installing Docker Compose plugin..."
+              sudo apt-get update
+              sudo apt-get install -y docker-compose-plugin
+            fi
 
-            echo "🚀 Launching backend..."
-            pm2 start backend/dist/index.js --name manga-back
+            echo "🐳 Building and starting containers..."
+            docker compose down || true
+            docker compose build --pull
+            docker compose up -d
 
-            echo "🚀 Launching frontend..."
-            cd frontend
-            pnpm build
-            pm2 start "pnpm run start" --name manga-front --cwd $(pwd)
-            cd ..
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
