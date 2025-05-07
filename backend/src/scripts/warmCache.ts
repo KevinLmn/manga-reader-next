@@ -74,4 +74,19 @@ async function warmCache() {
   }
 }
 
+async function waitForServer() {
+  const MAX_RETRIES = 10;
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      await axios.get(`${BACK_END_URL}/health`);
+      return;
+    } catch {
+      console.log(`Waiting for backend... (${i + 1}/${MAX_RETRIES})`);
+      await new Promise((res) => setTimeout(res, 2000));
+    }
+  }
+  throw new Error("Backend did not start in time.");
+}
+
+await waitForServer();
 await warmCache();

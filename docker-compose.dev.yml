@@ -8,11 +8,8 @@ services:
     container_name: manga-backend-dev
     ports:
       - "3012:3012"
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - NODE_ENV=development
+    env_file:
+      - backend/.env
     volumes:
       - ./backend:/app/backend
       - /app/backend/node_modules
@@ -26,11 +23,10 @@ services:
       context: .
       dockerfile: frontend/Dockerfile.dev
     container_name: manga-frontend-dev
+    env_file:
+      - frontend/.env
     ports:
       - "3011:3011"
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - NODE_ENV=development
     volumes:
       - ./frontend:/app/frontend
       - /app/frontend/node_modules

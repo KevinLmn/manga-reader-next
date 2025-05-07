@@ -1,50 +1,60 @@
-# ----------- Build stage -----------
-FROM node:20-alpine AS builder
-
+# ----------- Base Stage ----------- #
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install pnpm
+# ----------- Prune Stage ----------- #
+FROM base AS prune
+
+# Fix for global pnpm installs
+ENV PNPM_HOME="/root/.local/share/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy all relevant files from monorepo root
-COPY .npmrc ./
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-COPY tsconfig.json ./
-COPY frontend/package.json ./frontend/
-COPY backend/package.json ./backend/
+# Install Turbo globally
+RUN pnpm add -g turbo
 
-# Install dependencies (including hoisted ones)
-RUN pnpm install --frozen-lockfile
-
-# Copy full source after deps to maximize Docker cache
+# Copy monorepo
 COPY . .
 
-# Build the frontend app
-RUN pnpm --filter frontend build
+# Prune for frontend (Next.js app)
+RUN turbo prune --scope=frontend --docker
 
-# ----------- Production stage -----------
+# ----------- Install Stage ----------- #
+FROM base AS install
+
+# Copy pruned workspace with only needed files
+COPY --from=prune /app/out/json/ ./
+
+# Install dependencies
+RUN corepack enable && corepack prepare pnpm@latest --activate && pnpm install --frozen-lockfile
+
+# ----------- Build Stage ----------- #
+FROM base AS build
+
+COPY --from=install /app /app
+COPY --from=prune /app/out/full/ ./
+COPY tsconfig.json ./
+
+# Build only the frontend app
+RUN corepack enable && corepack prepare pnpm@latest --activate && pnpm turbo run build --filter=frontend...
+
+# ----------- Final Runner Stage ----------- #
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+USER nextjs
 
-# Copy package files and install production dependencies
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/frontend/package.json ./frontend/
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy built assets from builder
-COPY --from=builder /app/frontend/.next ./frontend/.next
-COPY --from=builder /app/frontend/public ./frontend/public
-COPY --from=builder /app/frontend/next.config.js ./frontend/
-
-# Set working directory to frontend
-WORKDIR /app/frontend
+# Copy final standalone output from build
+COPY --from=build --chown=nextjs:nodejs /app/frontend/.next/standalone/ ./
+COPY --from=build --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
+COPY --from=build --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 
 EXPOSE 3011
-
-# Start the application
 ENV PORT=3011
-CMD ["pnpm", "start"]
+
+CMD ["node", "frontend/server.js"]

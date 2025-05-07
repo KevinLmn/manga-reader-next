@@ -47,13 +47,12 @@ server.get("/latest", getLatestMangas);
 // Register proxy route
 server.register(proxyRoutes, { prefix: "/" });
 
-// Add health check route for Render
 server.get("/health", async () => {
   return { status: "ok" };
 });
 
-const port = process.env.PORT ? parseInt(process.env.PORT) : 3004;
-server.listen({ port, host: "127.0.0.1" }, (err, address) => {
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3012;
+server.listen({ port, host: "0.0.0.0" }, (err, address) => {
   if (err) {
     console.error(err);
     process.exit(1);

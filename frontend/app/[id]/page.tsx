@@ -55,6 +55,7 @@ export default function GetMangaById() {
       toast.info('Starting download...');
       const response = await api.get(`/manga/${id}/download/${chapterId}`, {
         responseType: 'blob',
+        timeout: 10 * 60 * 1000,
       });
 
       const chapter = data?.chapters.data.find((c: Chapter) => c.id === chapterId);

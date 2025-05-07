@@ -1,0 +1,8 @@
+.env
+.turbo
+node_modules
+.gitignore
+.git
+.vscode
+.husky
+.github

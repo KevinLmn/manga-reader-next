@@ -18,8 +18,10 @@ RUN pnpm install
 # Copy source code
 COPY . .
 
+WORKDIR /app/backend
+
 # Generate Prisma Client
-RUN pnpm --filter backend prisma generate
+RUN pnpm  prisma generate
 
 EXPOSE 3012
 
