@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -10,15 +10,8 @@ COPY .npmrc ./
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY tsconfig.json ./
 COPY frontend/package.json ./frontend/
-COPY backend/package.json ./backend/
 
 # Install all dependencies
-RUN pnpm install
+RUN pnpm install --filter frontend...
 
-# Copy source code
-COPY . .
-
-EXPOSE 3011
-
-# Start development server
-CMD ["pnpm", "--filter", "frontend", "dev"] 
+WORKDIR /app/frontend

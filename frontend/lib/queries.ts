@@ -58,8 +58,8 @@ export function useLatestManga() {
   return useQuery({
     queryKey: ['latest-manga'],
     queryFn: () => fetchFromCache('latest'),
-    staleTime: 1000 * 60 * 60 * 1, // 1h
-    gcTime: 1000 * 60 * 60 * 2, // Keep in memory 2h
+    staleTime: 0,
+    gcTime: 1000 * 60 * 30,
   });
 }
 
@@ -67,8 +67,8 @@ export function usePopularManga() {
   return useQuery({
     queryKey: ['popular-manga'],
     queryFn: () => fetchFromCache('popular'),
-    staleTime: 1000 * 60 * 60 * 1,
-    gcTime: 1000 * 60 * 60 * 2,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 30,
   });
 }
 
@@ -76,8 +76,8 @@ export const useCurrentPageImage = (chapterId: string, page: number, quality: st
   return useQuery({
     queryKey: ['page-image', chapterId, page, quality],
     queryFn: () => fetchImageAndTotalPages(chapterId, page, quality),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 0,
+    gcTime: 1000 * 30, // 30 seconds
   });
 };
 
@@ -90,8 +90,8 @@ export const usePrefetchAdjacentPages = (chapterId: string, page: number, qualit
         client.prefetchQuery({
           queryKey: ['page-image', chapterId, p, quality],
           queryFn: () => fetchImageAndTotalPages(chapterId, p, quality),
-          staleTime: 1000 * 60 * 5,
-          gcTime: 1000 * 60 * 10,
+          staleTime: 0,
+          gcTime: 1000 * 30,
         });
       }
     });
@@ -108,8 +108,8 @@ export const useMangaDetails = (mangaId: string, page: number = 1) =>
       });
       return data;
     },
-    staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60 * 2,
+    staleTime: 0,
+    gcTime: 1000 * 30,
   });
 
 export const usePrefetchMangaDetails = () => {
@@ -136,8 +136,8 @@ export const usePrefetchFirstPage = (quality: string = 'high') => {
     client.prefetchQuery({
       queryKey: ['page-image', chapterId, 1, quality],
       queryFn: () => fetchImageAndTotalPages(chapterId, 1, quality),
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 10,
+      staleTime: 0,
+      gcTime: 1000 * 30,
     });
   };
 };

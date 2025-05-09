@@ -1,9 +1,11 @@
 'use client';
 import { ChapterList } from '@/app/(features)/chapters/chapter-list';
 import { Card } from '@/app/components/ui/card';
+import { cleanOldEntries } from '@/lib/indexedDB';
 import api from '@/lib/interceptor';
 import { useMangaDetails, usePrefetchFirstPage } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -106,6 +108,18 @@ export default function GetMangaById() {
 
     fetchCoverImage();
   }, [data?.manga.data]);
+
+  useEffect(() => {
+    cleanOldEntries();
+  }, []);
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Remove all queries that start with 'page-image'
+    queryClient.removeQueries({ queryKey: ['page-image'], exact: false });
+    console.log('removed');
+  }, [queryClient]);
 
   if (isDataLoading) {
     return <div>Loading...</div>;

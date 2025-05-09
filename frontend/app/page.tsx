@@ -9,12 +9,15 @@ import {
   CarouselPrevious,
 } from '@/app/components/ui/carousel';
 import { Loading } from '@/app/components/ui/loading';
+import { clearDatabase } from '@/lib/indexedDB';
 import { useLatestManga, usePopularManga, usePrefetchMangaDetails } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import React, { useEffect } from 'react';
 
 interface MangaRelationship {
   type: string;
@@ -46,15 +49,29 @@ interface Manga {
   relationships: MangaRelationship[];
 }
 
+const MemoizedMangaSection = React.memo(MangaSection);
+
 export default function List() {
   // const [openMenu, setOpenMenu] = useState(false);
   const { data: popularMangas, isLoading: isPopularLoading } = usePopularManga();
   const { data: latestMangas, isLoading: isLatestLoading } = useLatestManga();
-  const prefetchManga = usePrefetchMangaDetails();
 
   const handleMangaHover = (mangaId: string) => {
-    prefetchManga(mangaId);
+    usePrefetchMangaDetails(mangaId);
   };
+
+  useEffect(() => {
+    clearDatabase();
+  }, []);
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Remove all queries that start with 'page-image'
+    queryClient.removeQueries({ queryKey: ['page-image'], exact: false });
+    queryClient.removeQueries({ queryKey: ['manga-details'], exact: false });
+    console.log('removed');
+  }, [queryClient]);
 
   if (isPopularLoading || isLatestLoading) {
     return <Loading />;
@@ -117,6 +134,10 @@ export default function List() {
                             )?.attributes?.fileName
                           }.256.jpg`
                         )}
+                        decoding="sync"
+                        {...(index < 2
+                          ? { priority: true, loading: 'eager' }
+                          : { loading: 'lazy' })}
                       />
                       <div className="h-full w-[75%] flex flex-col items-between justify-between px-4 text-white pb-10">
                         <p className="font-bold text-2xl">{manga.attributes.title.en}</p>
@@ -157,10 +178,18 @@ export default function List() {
           </Carousel>
         </div>
         {popularMangas && (
-          <MangaSection mangas={popularMangas} sectionType={SectionType.Popular} isLoading={isPopularLoading} />
+          <MemoizedMangaSection
+            mangas={popularMangas}
+            sectionType={SectionType.Popular}
+            isLoading={isPopularLoading}
+          />
         )}
         {latestMangas && (
-          <MangaSection mangas={latestMangas} sectionType={SectionType.LatestUpdates} isLoading={isLatestLoading} />
+          <MemoizedMangaSection
+            mangas={latestMangas}
+            sectionType={SectionType.LatestUpdates}
+            isLoading={isLatestLoading}
+          />
         )}
       </div>
     </div>

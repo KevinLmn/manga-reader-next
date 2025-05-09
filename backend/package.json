@@ -22,7 +22,7 @@
     "tsx": "^4.19.4"
   },
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc --project tsconfig.json",
     "start": "node dist/index.js",
     "warm-cache": "tsx src/scripts/warmCache.ts"

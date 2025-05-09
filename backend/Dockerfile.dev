@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -10,20 +10,8 @@ COPY .npmrc ./
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY tsconfig.json ./
 COPY backend/package.json ./backend/
-COPY frontend/package.json ./frontend/
+
+RUN apt-get update -y && apt-get install -y openssl
 
 # Install all dependencies
-RUN pnpm install
-
-# Copy source code
-COPY . .
-
-WORKDIR /app/backend
-
-# Generate Prisma Client
-RUN pnpm  prisma generate
-
-EXPOSE 3012
-
-# Start development server
-CMD ["pnpm", "--filter", "backend", "dev"] 
+RUN pnpm install --filter backend...

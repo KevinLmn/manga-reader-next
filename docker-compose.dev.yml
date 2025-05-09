@@ -11,13 +11,16 @@ services:
     env_file:
       - backend/.env
     volumes:
-      - ./backend:/app/backend
+      - .:/app
+      - /app/node_modules # 🛡 Prevent host node_modules from overriding container's
       - /app/backend/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     depends_on:
       - redis
       - postgres
-    command: pnpm --filter backend dev
-
+    command: sh -c "pnpm --filter backend exec prisma generate && pnpm --filter backend dev"
   frontend:
     build:
       context: .
@@ -28,11 +31,17 @@ services:
     ports:
       - "3011:3011"
     volumes:
-      - ./frontend:/app/frontend
+      - .:/app
+      - /app/node_modules
       - /app/frontend/node_modules
     depends_on:
       - backend
     command: pnpm --filter frontend dev
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=100
 
   redis:
     image: redis:7-alpine

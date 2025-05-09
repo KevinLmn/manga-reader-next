@@ -27,7 +27,7 @@ interface MangaAttributes {
     en: string;
   };
   lastChapter?: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 interface Manga {
@@ -120,22 +120,25 @@ const MangaSection = ({ mangas, sectionType, isLoading }: MangaSectionProps) => 
                 <div className="w-full h-[200px] bg-gray-800 flex items-center justify-center">
                   <span className="text-gray-400">Failed to load image</span>
                 </div>
-              ) : (
+              ) : coverUrls[manga.id] ? (
                 <Image
                   alt="Manga Cover"
                   className="object-cover"
                   height={400}
                   width={400}
-                  src={coverUrls[manga.id] || ''}
+                  src={coverUrls[manga.id] as string}
                   style={{
                     aspectRatio: '160/200',
                     objectFit: 'cover',
+                    height: 'auto',
                   }}
                   priority={index < 4}
                   onError={() => {
                     setErrorImages(prev => ({ ...prev, [manga.id]: true }));
                   }}
                 />
+              ) : (
+                <div className="w-full h-[200px] bg-gray-200" />
               )}
               <Reveal>
                 <div className="p-2 flex flex-col gap-1 justify-between">
@@ -149,7 +152,7 @@ const MangaSection = ({ mangas, sectionType, isLoading }: MangaSectionProps) => 
                   </p>
                   <div className="flex justify-between text-xs">
                     <p>{manga.attributes.lastChapter && `Ch.${manga.attributes.lastChapter}`}</p>
-                    <p>{getTimePassedSince(manga.attributes.updatedAt)}</p>
+                    <p>{getTimePassedSince(manga.attributes.updatedAt || '')}</p>
                   </div>
                 </div>
               </Reveal>
