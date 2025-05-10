@@ -56,8 +56,10 @@ export default function List() {
   const { data: popularMangas, isLoading: isPopularLoading } = usePopularManga();
   const { data: latestMangas, isLoading: isLatestLoading } = useLatestManga();
 
+  const prefetchManga = usePrefetchMangaDetails();
+
   const handleMangaHover = (mangaId: string) => {
-    usePrefetchMangaDetails(mangaId);
+    prefetchManga(mangaId);
   };
 
   useEffect(() => {

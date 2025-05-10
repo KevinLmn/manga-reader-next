@@ -9,7 +9,6 @@ COPY .npmrc ./
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY tsconfig.json ./
 COPY backend/package.json ./backend/
-COPY frontend/package.json ./frontend/
 
 # Install all deps (hoisted)
 RUN pnpm install --frozen-lockfile
