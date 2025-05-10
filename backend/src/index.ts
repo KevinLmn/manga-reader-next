@@ -2,6 +2,7 @@ import cors from "@fastify/cors";
 import fastify from "fastify";
 import { downloadChapterController } from "./controllers/downloadChapterController.js";
 import { getChapterPageController } from "./controllers/getChapterPageController.js";
+import { getChapterTotalPageController } from "./controllers/getChapterTotalPage.js";
 import { getLatestMangas } from "./controllers/getLatestMangasController.js";
 import { getMangaController } from "./controllers/getMangaController.js";
 import { getPopularMangas } from "./controllers/getPopularMangasController.js";
@@ -43,6 +44,8 @@ server.get("/manga/:id/download/:chapterId", downloadChapterController);
 server.get("/popular", getPopularMangas);
 
 server.get("/latest", getLatestMangas);
+
+server.get("/manga/chapter/:chapterId/total", getChapterTotalPageController);
 
 // Register proxy route
 server.register(proxyRoutes, { prefix: "/" });

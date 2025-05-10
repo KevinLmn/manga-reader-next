@@ -15,7 +15,7 @@ const CACHE_DURATION = {
  */
 interface ImageEntry {
   key: string;
-  base64Image: string;
+  blob: Blob;
   timestamp: number;
 }
 
@@ -51,10 +51,10 @@ const db = new MangaDB();
  * @param base64Image - Base64 encoded image data
  * @returns Promise resolving to true if successful
  */
-export const setImageInDB = async (key: string, base64Image: string): Promise<boolean> => {
+export const setImageInDB = async (key: string, blob: Blob): Promise<boolean> => {
   try {
     const timestamp = Date.now();
-    await db.images.put({ key, base64Image, timestamp });
+    await db.images.put({ key, blob, timestamp });
     return true;
   } catch (error) {
     console.error('Failed to store image in IndexedDB:', error);
@@ -67,10 +67,10 @@ export const setImageInDB = async (key: string, base64Image: string): Promise<bo
  * @param key - Unique identifier for the image
  * @returns Promise resolving to the base64 image or null if not found
  */
-export const getImageFromDB = async (key: string): Promise<string | null> => {
+export const getImageFromDB = async (key: string): Promise<Blob | null> => {
   try {
     const entry = await db.images.get(key);
-    return entry ? entry.base64Image : null;
+    return entry ? entry.blob : null;
   } catch (error) {
     console.error('Failed to retrieve image from IndexedDB:', error);
     return null;
@@ -83,7 +83,7 @@ export const getImageFromDB = async (key: string): Promise<string | null> => {
  * @param value - Total pages value
  * @returns Promise resolving to true if successful
  */
-export const setTotalPagesInDB = async (key: string, value: string | number): Promise<boolean> => {
+export const setTotalPagesInDB = async (key: string, value: number): Promise<boolean> => {
   try {
     const timestamp = Date.now();
     await db.totalPages.put({ key, value: String(value), timestamp });
@@ -99,10 +99,10 @@ export const setTotalPagesInDB = async (key: string, value: string | number): Pr
  * @param key - Unique identifier for the total pages
  * @returns Promise resolving to the total pages value or null if not found
  */
-export const getTotalPagesFromDB = async (key: string): Promise<string | null> => {
+export const getTotalPagesFromDB = async (key: string): Promise<number | null> => {
   try {
     const entry = await db.totalPages.get(key);
-    return entry ? entry.value : null;
+    return entry ? Number(entry.value) : null;
   } catch (error) {
     console.error('Failed to retrieve total pages from IndexedDB:', error);
     return null;
@@ -118,6 +118,7 @@ export const cleanOldEntries = async (): Promise<void> => {
   try {
     const now = Date.now();
 
+    // Clean up images more aggressively
     const oldImages = await db.images
       .where('timestamp')
       .below(now - CACHE_DURATION.SHORT)
@@ -128,14 +129,20 @@ export const cleanOldEntries = async (): Promise<void> => {
       console.log(`Cleaned ${oldImages.length} old images from cache`);
     }
 
+    // Keep total pages entries longer
     const oldTotalPages = await db.totalPages
       .where('timestamp')
-      .below(now - CACHE_DURATION.SHORT)
+      .below(now - CACHE_DURATION.MEDIUM)
       .toArray();
 
     if (oldTotalPages.length > 0) {
       await db.totalPages.bulkDelete(oldTotalPages.map(entry => entry.key));
       console.log(`Cleaned ${oldTotalPages.length} old total pages entries from cache`);
+    }
+
+    // Force garbage collection if available
+    if (window.gc) {
+      window.gc();
     }
   } catch (error) {
     console.error('Error cleaning old entries from IndexedDB:', error);

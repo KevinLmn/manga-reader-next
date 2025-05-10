@@ -3,6 +3,7 @@ import { useMangaCover } from '@/lib/queries';
 import { Reveal } from '@components/ui/Reveal';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 import { Manga } from './MangaSection';
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export const MangaCard = ({ manga, index, onHover }: Props) => {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
   const coverArt = manga.relationships.find(el => el.type === 'cover_art');
   const {
     data: coverUrl,
@@ -52,30 +55,34 @@ export const MangaCard = ({ manga, index, onHover }: Props) => {
             className="object-cover"
             height={400}
             width={400}
+            loading={index < 5 ? 'eager' : 'lazy'}
+            priority={index < 5}
             src={coverUrl}
             style={{
               aspectRatio: '160/200',
               objectFit: 'cover',
               height: 'auto',
             }}
-            priority={index < 4}
+            onLoad={() => setIsImageLoaded(true)}
           />
         )}
 
-        <Reveal>
-          <div className="p-2 flex flex-col gap-1 justify-between">
-            <h3 className="text-sm font-bold line-clamp-1">
-              {manga.attributes.title.en?.length > 40
-                ? manga.attributes.title.en.substring(0, 40) + '...'
-                : manga.attributes.title.en}
-            </h3>
-            <p className="text-xs line-clamp-2 text-start">{manga.attributes.description.en}</p>
-            <div className="flex justify-between text-xs">
-              <p>{manga.attributes.lastChapter && `Ch.${manga.attributes.lastChapter}`}</p>
-              <p>{getTimePassedSince(manga.attributes.updatedAt || '')}</p>
+        {isImageLoaded && (
+          <Reveal>
+            <div className="p-2 flex flex-col gap-1 justify-between">
+              <h3 className="text-sm font-bold line-clamp-1">
+                {manga.attributes.title.en?.length > 40
+                  ? manga.attributes.title.en.substring(0, 40) + '...'
+                  : manga.attributes.title.en}
+              </h3>
+              <p className="text-xs line-clamp-2 text-start">{manga.attributes.description.en}</p>
+              <div className="flex justify-between text-xs">
+                <p>{manga.attributes.lastChapter && `Ch.${manga.attributes.lastChapter}`}</p>
+                <p>{getTimePassedSince(manga.attributes.updatedAt || '')}</p>
+              </div>
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        )}
       </Link>
     </div>
   );

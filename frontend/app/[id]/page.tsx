@@ -82,11 +82,11 @@ export default function GetMangaById() {
 
   const { data: mangaCover, isLoading: isMangaCoverLoading } = useMangaCover(
     id as string,
-    data?.manga.data.relationships.find(el => el.type === 'cover_art')?.attributes.fileName,
+    data?.manga.data.relationships.find(
+      (el: { type: string; attributes: { fileName: string } }) => el.type === 'cover_art'
+    )?.attributes.fileName,
     '512'
   );
-
-  console.log(isMangaCoverLoading);
 
   useEffect(() => {
     cleanOldEntries();
@@ -97,7 +97,6 @@ export default function GetMangaById() {
   useEffect(() => {
     // Remove all queries that start with 'page-image'
     queryClient.removeQueries({ queryKey: ['page-image'], exact: false });
-    console.log('removed');
   }, [queryClient]);
 
   if (isDataLoading) {

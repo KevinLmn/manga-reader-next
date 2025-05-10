@@ -10,8 +10,8 @@ import { useEffect } from 'react';
 import { getProxiedImageUrl } from './utils';
 
 type PageImageData = {
-  base64: string;
-  numberOfPages: number;
+  blob: Blob;
+  numberOfPages?: number;
 };
 
 const toBase64 = (buffer: ArrayBuffer | { type: string; data: number[] }): string => {
@@ -30,24 +30,40 @@ const toBase64 = (buffer: ArrayBuffer | { type: string; data: number[] }): strin
   return `data:image/jpeg;base64,${btoa(binary)}`;
 };
 
+const toBlobUrl = (buffer: ArrayBuffer): string => {
+  const blob = new Blob([buffer], { type: 'image/jpeg' });
+  return URL.createObjectURL(blob);
+};
 const fetchImageAndTotalPages = async (
   chapterId: string,
   page: number,
   quality: string
 ): Promise<PageImageData> => {
   const key = `/manga/chapter/${chapterId}/${page}?quality=${quality}`;
-  const cached = await getImageFromDB(key);
-  if (cached) {
-    const totalPages = await getTotalPagesFromDB(`/manga/chapter/${chapterId}/total`);
-    return { base64: cached, numberOfPages: totalPages ? Number(totalPages) : 0 };
+  const cachedBuffer = await getImageFromDB(key);
+
+  let totalPages = await getTotalPagesFromDB(`/manga/chapter/${chapterId}/total`);
+  if (!totalPages) {
+    const { data: totalPagesData } = await api.get(`/manga/chapter/${chapterId}/total`);
+    totalPages = Number(totalPagesData.totalPages);
+    await setTotalPagesInDB(`/manga/chapter/${chapterId}/total`, totalPages);
   }
-  const { data } = await api.get(key);
-  const base64 = toBase64(data.buffer);
 
-  await setImageInDB(key, base64);
-  await setTotalPagesInDB(`/manga/chapter/${chapterId}/total`, data.numberOfPages);
+  if (cachedBuffer) {
+    return {
+      blob: cachedBuffer,
+      numberOfPages: Number(totalPages),
+    };
+  }
 
-  return { base64, numberOfPages: data.numberOfPages };
+  const { data } = await api.get(key, { responseType: 'arraybuffer' });
+  const blob = new Blob([data], { type: 'image/jpeg' });
+  await setImageInDB(key, blob);
+
+  return {
+    blob,
+    numberOfPages: Number(totalPages),
+  };
 };
 
 const fetchFromCache = async (key: string) => {
@@ -74,11 +90,33 @@ export function usePopularManga() {
 }
 
 export const useCurrentPageImage = (chapterId: string, page: number, quality: string) => {
+  const queryClient = useQueryClient();
+
+  // Cleanup old images when component unmounts
+  useEffect(() => {
+    return () => {
+      // Remove all page images except current and adjacent pages
+      const pagesToKeep = [page, page + 1, page + 2, page - 1];
+      const allQueries = queryClient.getQueryCache().getAll();
+      allQueries.forEach(query => {
+        const queryKey = query.queryKey;
+        if (
+          Array.isArray(queryKey) &&
+          queryKey[0] === 'page-image' &&
+          queryKey[1] === chapterId &&
+          !pagesToKeep.includes(queryKey[2])
+        ) {
+          queryClient.removeQueries({ queryKey });
+        }
+      });
+    };
+  }, [chapterId, page, queryClient]);
+
   return useQuery({
     queryKey: ['page-image', chapterId, page, quality],
     queryFn: () => fetchImageAndTotalPages(chapterId, page, quality),
     staleTime: 0,
-    gcTime: 1000 * 30, // 30 seconds
+    gcTime: 1000 * 10, // 10 seconds
   });
 };
 
@@ -144,7 +182,6 @@ export const usePrefetchFirstPage = (quality: string = 'high') => {
 };
 
 export const useMangaCover = (mangaId: string, fileName?: string, quality: string = '256') => {
-  
   return useQuery({
     queryKey: ['manga-cover', mangaId, quality],
     queryFn: async () => {

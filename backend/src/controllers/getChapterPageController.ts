@@ -1,6 +1,6 @@
 import axios from "axios";
 import dotenv from "dotenv";
-import { FastifyRequest } from "fastify";
+import { FastifyReply, FastifyRequest } from "fastify";
 import redis from "../redis.js";
 import { createLogger } from "../utils/logger.js";
 dotenv.config();
@@ -30,8 +30,9 @@ export const getChapterPageController = async (
     Querystring: {
       quality?: string;
     };
-  }>
-): Promise<GetChapterPageReturnType> => {
+  }>,
+  reply: FastifyReply
+): Promise<void> => {
   const { chapterId } = request.params;
   const { chapterPage } = request.params;
   const token = request.headers.authorization;
@@ -56,11 +57,14 @@ export const getChapterPageController = async (
         Authorization: `Bearer ${token}`,
       },
     });
-    return {
-      buffer: imageResponse.data,
-      contentType: imageResponse.headers["content-type"],
-      numberOfPages: Number(numberOfPages),
-    };
+    reply.header("Content-Type", imageResponse.headers["content-type"]);
+    reply.send(imageResponse.data);
+    return;
+    // return {
+    //   buffer: imageResponse.data,
+    //   contentType: imageResponse.headers["content-type"],
+    //   numberOfPages: Number(numberOfPages),
+    // };
   }
 
   logger.info("Cache miss for chapter page", 19, {
@@ -108,23 +112,28 @@ export const getChapterPageController = async (
 
   const imageUrl = `${parsedMeta.baseUrl}/${quality === "high" ? "data" : "data-saver"}/${parsedMeta.hash}/${fileName}`;
 
-  const imageResponse = await axios.get(imageUrl, {
-    responseType: "arraybuffer",
-    headers: {
-      Referer: "https://mangadex.org",
-    },
-  });
+  let imageResponse;
+  try {
+    imageResponse = await axios.get(imageUrl, {
+      responseType: "arraybuffer",
+      headers: { Referer: "https://mangadex.org" },
+    });
 
-  await redis.set(cacheKey, imageUrl, "EX", 24 * 60 * 60);
-  logger.info("Cached chapter page image", 60, {
-    chapterId,
-    chapterPage,
-    quality,
-  });
+    await redis.set(cacheKey, imageUrl, "EX", 24 * 60 * 60);
+    logger.info("Cached chapter page image", 60, {
+      chapterId,
+      chapterPage,
+      quality,
+    });
 
-  return {
-    buffer: imageResponse.data,
-    contentType: imageResponse.headers["content-type"],
-    numberOfPages: parsedMeta.totalPages,
-  };
+    reply.header("Content-Type", imageResponse.headers["content-type"]);
+    reply.raw.end(imageResponse.data);
+
+    // return {
+    //   buffer: imageResponse.data,
+    //   contentType: imageResponse.headers["content-type"],
+    // };
+  } catch (error) {
+    logger.error("Error fetching chapter page", 60);
+  }
 };

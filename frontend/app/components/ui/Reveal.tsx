@@ -15,7 +15,7 @@ export const Reveal = ({ children, width = 'full' }: Props) => {
     if (isInView) {
       mainControls.start('visible');
     }
-  }, [isInView]);
+  }, [isInView, mainControls]);
 
   return (
     <div

@@ -3,10 +3,11 @@ import { Button } from '@/app/components/ui/button';
 import CustomPagination from '@/app/components/ui/pagination';
 import { cleanOldEntries } from '@/lib/indexedDB';
 import { useCurrentPageImage, usePrefetchAdjacentPages } from '@/lib/queries';
+import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const enum Quality {
   HIGH = 'high',
@@ -18,12 +19,35 @@ export default function GetMangaPage() {
   const page = Number(chapterPage);
   const [quality, setQuality] = useState(Quality.HIGH);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const queryClient = useQueryClient();
 
   const safeChapterId = typeof chapterId === 'string' ? chapterId : '';
   const { data: pageData, isLoading } = useCurrentPageImage(safeChapterId, page, quality);
   const total = pageData?.numberOfPages || 0;
 
   usePrefetchAdjacentPages(safeChapterId, page, quality);
+
+  // Cleanup when navigating away
+  useEffect(() => {
+    return () => {
+      // Clear all page images except current and adjacent pages
+      const pagesToKeep = [page, page + 1, page + 2, page - 1];
+      queryClient
+        .getQueryCache()
+        .getAll()
+        .forEach((query: { queryKey: unknown }) => {
+          const queryKey = query.queryKey;
+          if (
+            Array.isArray(queryKey) &&
+            queryKey[0] === 'page-image' &&
+            queryKey[1] === safeChapterId &&
+            !pagesToKeep.includes(queryKey[2])
+          ) {
+            queryClient.removeQueries({ queryKey });
+          }
+        });
+    };
+  }, [safeChapterId, page, queryClient]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -46,6 +70,31 @@ export default function GetMangaPage() {
   useEffect(() => {
     cleanOldEntries();
   }, []);
+
+  const objectUrl = useMemo(() => {
+    if (pageData?.blob instanceof Blob) {
+      return URL.createObjectURL(pageData.blob);
+    }
+    return null;
+  }, [pageData?.blob]);
+
+  const previousUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Revoke previous URL if it exists
+    if (previousUrlRef.current) {
+      URL.revokeObjectURL(previousUrlRef.current);
+    }
+    // Save current one
+    previousUrlRef.current = objectUrl;
+
+    return () => {
+      // Revoke current one on unmount
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [objectUrl]);
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -147,9 +196,9 @@ export default function GetMangaPage() {
       <main className="flex-1 flex flex-col items-center justify-center pt-16 pb-16 relative cursor-pointer">
         <div
           className="max-w-4xl w-full mx-auto px-4 transition-opacity duration-300"
-          style={{ opacity: pageData?.base64 ? 1 : 0 }}
+          style={{ opacity: pageData?.blob ? 1 : 0 }}
         >
-          {pageData?.base64 ? (
+          {pageData?.blob ? (
             <div className="relative shadow-2xl">
               {page > 1 && (
                 <Link
@@ -167,16 +216,19 @@ export default function GetMangaPage() {
                   <span className="block h-full w-full" />
                 </Link>
               )}
-              <Image
-                src={pageData.base64}
-                alt={`Chapter page ${page}`}
-                width={1080}
-                height={0}
-                className="h-auto w-full object-contain"
-                priority
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-              />
+              {objectUrl && (
+                <Image
+                  key={objectUrl}
+                  src={objectUrl}
+                  alt={`Chapter page ${page}`}
+                  width={1080}
+                  height={0}
+                  className="h-auto w-full object-contain"
+                  priority
+                  unoptimized
+                  onError={() => console.error('Image failed to load', objectUrl)}
+                />
+              )}
             </div>
           ) : (
             <div className="h-[80vh] flex items-center justify-center">

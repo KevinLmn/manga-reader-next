@@ -1,9 +1,8 @@
 'use client';
-import api from '@/lib/interceptor';
 import { Loading } from '@components/ui/loading';
 import { Reveal } from '@components/ui/Reveal';
 import { usePrefetchMangaCover, usePrefetchMangaDetails } from '@lib/queries';
-import { useQueryClient } from '@tanstack/react-query';
+import { memo } from 'react';
 import { MangaCard } from './MangaCard';
 
 export enum SectionType {
@@ -41,6 +40,8 @@ interface MangaSectionProps {
   isLoading: boolean;
 }
 
+const MemoizedMangaCard = memo(MangaCard);
+
 const MangaSection = ({ mangas, sectionType, isLoading }: MangaSectionProps) => {
   const prefetchManga = usePrefetchMangaDetails();
   const prefetchMangaCover = usePrefetchMangaCover();
@@ -58,7 +59,7 @@ const MangaSection = ({ mangas, sectionType, isLoading }: MangaSectionProps) => 
       </Reveal>
       <div className="mt-4 bg-neutral-800 p-4 flex gap-2 flex-wrap justify-around">
         {mangas.map((manga, index) => (
-          <MangaCard
+          <MemoizedMangaCard
             key={manga.id}
             manga={manga}
             index={index}
