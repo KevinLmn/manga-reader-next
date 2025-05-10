@@ -3,8 +3,7 @@ import { ChapterList } from '@/app/(features)/chapters/chapter-list';
 import { Card } from '@/app/components/ui/card';
 import { cleanOldEntries } from '@/lib/indexedDB';
 import api from '@/lib/interceptor';
-import { useMangaDetails, usePrefetchFirstPage } from '@/lib/queries';
-import { getProxiedImageUrl } from '@/lib/utils';
+import { useMangaCover, useMangaDetails, usePrefetchFirstPage } from '@/lib/queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -45,8 +44,6 @@ interface Manga {
 
 export default function GetMangaById() {
   const [page, setPage] = useState<number>(1);
-  const [coverImage, setCoverImage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { id } = useParams();
 
   const { data, isLoading: isDataLoading } = useMangaDetails(id as string, page);
@@ -83,31 +80,13 @@ export default function GetMangaById() {
     }
   };
 
-  useEffect(() => {
-    const fetchCoverImage = async () => {
-      if (data?.manga.data.id && data?.manga.data.relationships?.length > 0) {
-        setIsLoading(true);
-        try {
-          const coverArt = data.manga.data.relationships.find(
-            (el: { type: string }) => el.type === 'cover_art'
-          );
-          if (coverArt) {
-            const coverUrl = `https://uploads.mangadex.org/covers/${data.manga.data.id}/${coverArt.attributes.fileName}.512.jpg`;
-            const base64Image = await getProxiedImageUrl(coverUrl);
-            if (base64Image) {
-              setCoverImage(base64Image);
-            }
-          }
-        } catch (error) {
-          toast.error('Failed to load cover image');
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
+  const { data: mangaCover, isLoading: isMangaCoverLoading } = useMangaCover(
+    id as string,
+    data?.manga.data.relationships.find(el => el.type === 'cover_art')?.attributes.fileName,
+    '512'
+  );
 
-    fetchCoverImage();
-  }, [data?.manga.data]);
+  console.log(isMangaCoverLoading);
 
   useEffect(() => {
     cleanOldEntries();
@@ -135,11 +114,11 @@ export default function GetMangaById() {
       </div>
       <div className="grid gap-8 md:grid-cols-[300px_1fr]">
         <Card className="p-6">
-          {isLoading ? (
+          {isMangaCoverLoading || !mangaCover ? (
             <div className="aspect-[2/3] w-full animate-pulse rounded-lg bg-gray-200" />
           ) : (
             <Image
-              src={coverImage}
+              src={mangaCover}
               alt={data?.manga.data.attributes?.title?.en || 'Manga Cover'}
               width={300}
               height={450}

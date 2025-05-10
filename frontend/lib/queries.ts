@@ -7,6 +7,7 @@ import {
 import api from '@/lib/interceptor';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { getProxiedImageUrl } from './utils';
 
 type PageImageData = {
   base64: string;
@@ -138,6 +139,35 @@ export const usePrefetchFirstPage = (quality: string = 'high') => {
       queryFn: () => fetchImageAndTotalPages(chapterId, 1, quality),
       staleTime: 0,
       gcTime: 1000 * 30,
+    });
+  };
+};
+
+export const useMangaCover = (mangaId: string, fileName?: string, quality: string = '256') => {
+  
+  return useQuery({
+    queryKey: ['manga-cover', mangaId, quality],
+    queryFn: async () => {
+      if (!fileName) throw new Error('Missing fileName for cover');
+      const rawUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.${quality}.jpg`;
+      return getProxiedImageUrl(rawUrl);
+    },
+    enabled: !!fileName,
+    staleTime: 1000 * 60 * 60, // 1h
+    retry: 1,
+  });
+};
+
+export const usePrefetchMangaCover = () => {
+  const queryClient = useQueryClient();
+  return (mangaId: string, fileName?: string, quality: string = '256') => {
+    queryClient.prefetchQuery({
+      queryKey: ['manga-cover', mangaId, quality],
+      queryFn: async () => {
+        if (!fileName) throw new Error('Missing fileName for cover');
+        const rawUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.${quality}.jpg`;
+        return getProxiedImageUrl(rawUrl);
+      },
     });
   };
 };

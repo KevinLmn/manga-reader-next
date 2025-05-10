@@ -9,10 +9,9 @@ import {
   CarouselPrevious,
 } from '@/app/components/ui/carousel';
 import { Loading } from '@/app/components/ui/loading';
-import { clearDatabase } from '@/lib/indexedDB';
+import { cleanOldEntries } from '@/lib/indexedDB';
 import { useLatestManga, usePopularManga, usePrefetchMangaDetails } from '@/lib/queries';
 import { getProxiedImageUrl } from '@/lib/utils';
-import { useQueryClient } from '@tanstack/react-query';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -63,17 +62,8 @@ export default function List() {
   };
 
   useEffect(() => {
-    clearDatabase();
+    cleanOldEntries();
   }, []);
-
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    // Remove all queries that start with 'page-image'
-    queryClient.removeQueries({ queryKey: ['page-image'], exact: false });
-    queryClient.removeQueries({ queryKey: ['manga-details'], exact: false });
-    console.log('removed');
-  }, [queryClient]);
 
   if (isPopularLoading || isLatestLoading) {
     return <Loading />;

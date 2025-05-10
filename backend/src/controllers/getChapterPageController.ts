@@ -39,15 +39,17 @@ export const getChapterPageController = async (
 
   const cacheKey = `chapterPage:${chapterId}:${chapterPage}:${quality}`;
   const metaCacheKey = `chapterMeta:${chapterId}`;
-  const cached = await redis.get(cacheKey);
-  if (cached) {
+  const cachedUrl = await redis.get(cacheKey);
+  const cachedMeta = await redis.get(metaCacheKey);
+
+  const numberOfPages = cachedMeta ? JSON.parse(cachedMeta).totalPages : null;
+  if (cachedUrl && numberOfPages) {
     logger.info("Cache hit for chapter page", 14, {
       chapterId,
       chapterPage,
       quality,
     });
-    const data = JSON.parse(cached);
-    const imageResponse = await axios.get(data.url, {
+    const imageResponse = await axios.get(cachedUrl, {
       responseType: "arraybuffer",
       headers: {
         Referer: "https://mangadex.org",
@@ -57,7 +59,7 @@ export const getChapterPageController = async (
     return {
       buffer: imageResponse.data,
       contentType: imageResponse.headers["content-type"],
-      numberOfPages: data.numberOfPages,
+      numberOfPages: Number(numberOfPages),
     };
   }
 
@@ -113,7 +115,7 @@ export const getChapterPageController = async (
     },
   });
 
-  await redis.set(cacheKey, imageResponse.data, "EX", 24 * 60 * 60);
+  await redis.set(cacheKey, imageUrl, "EX", 24 * 60 * 60);
   logger.info("Cached chapter page image", 60, {
     chapterId,
     chapterPage,
