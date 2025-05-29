@@ -95,7 +95,6 @@ export default function GetMangaById() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Remove all queries that start with 'page-image'
     queryClient.removeQueries({ queryKey: ['page-image'], exact: false });
   }, [queryClient]);
 

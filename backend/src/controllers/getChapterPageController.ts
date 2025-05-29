@@ -126,8 +126,9 @@ export const getChapterPageController = async (
       quality,
     });
 
-    reply.header("Content-Type", imageResponse.headers["content-type"]);
-    reply.raw.end(imageResponse.data);
+    reply
+      .header("Content-Type", imageResponse.headers["content-type"])
+      .send(imageResponse.data);
 
     // return {
     //   buffer: imageResponse.data,
